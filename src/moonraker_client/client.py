@@ -12,10 +12,20 @@ import httpx
 
 from moonraker_client._base import handle_request_error, unwrap_response
 from moonraker_client._transport import AsyncHttpTransport, HttpTransport
+from moonraker_client.api.files import AsyncFilesMixin, FilesMixin
+from moonraker_client.api.history import AsyncHistoryMixin, HistoryMixin
+from moonraker_client.api.jobs import AsyncJobsMixin, JobsMixin
 from moonraker_client.api.printer import AsyncPrinterMixin, PrinterMixin
+from moonraker_client.api.server import AsyncServerMixin, ServerMixin
 
 
-class MoonrakerClient(PrinterMixin):
+class MoonrakerClient(
+    PrinterMixin,
+    ServerMixin,
+    FilesMixin,
+    HistoryMixin,
+    JobsMixin,
+):
     """Synchronous client for the Moonraker API.
 
     Usage::
@@ -55,19 +65,7 @@ class MoonrakerClient(PrinterMixin):
         data: dict[str, Any] | None = None,
         files: Any | None = None,
     ) -> Any:
-        """Send an HTTP request and return the unwrapped result.
-
-        Args:
-            method: HTTP method.
-            path: URL path.
-            params: Query parameters.
-            json: JSON body.
-            data: Form data.
-            files: File uploads.
-
-        Returns:
-            Unwrapped response data.
-        """
+        """Send an HTTP request and return the unwrapped result."""
         try:
             response = self._transport.request(
                 method, path, params=params, json=json, data=data, files=files
@@ -87,7 +85,13 @@ class MoonrakerClient(PrinterMixin):
         self.close()
 
 
-class AsyncMoonrakerClient(AsyncPrinterMixin):
+class AsyncMoonrakerClient(
+    AsyncPrinterMixin,
+    AsyncServerMixin,
+    AsyncFilesMixin,
+    AsyncHistoryMixin,
+    AsyncJobsMixin,
+):
     """Asynchronous client for the Moonraker API.
 
     Usage::
