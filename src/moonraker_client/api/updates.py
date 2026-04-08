@@ -90,9 +90,15 @@ class UpdatesMixin:
             body["hard"] = hard
         return self._request("POST", "/machine/update/recover", json=body)
 
-    def machine_update_rollback(self) -> Any:
-        """Rollback to the previous version"""
-        return self._request("POST", "/machine/update/rollback")
+    def machine_update_rollback(self, name: str) -> Any:
+        """Rollback to the previous version.
+
+        Args:
+            name: The name of the software component to roll back.
+
+        JSON-RPC method: machine.update.rollback
+        """
+        return self._request("POST", "/machine/update/rollback", json={"name": name})  # type: ignore[attr-defined]
 
     def machine_update_full(self) -> Any:
         """Perform a full update
@@ -256,9 +262,15 @@ class AsyncUpdatesMixin:
             body["hard"] = hard
         return await self._request("POST", "/machine/update/recover", json=body)
 
-    async def machine_update_rollback(self) -> Any:
-        """Rollback to the previous version"""
-        return await self._request("POST", "/machine/update/rollback")
+    async def machine_update_rollback(self, name: str) -> Any:
+        """Rollback to the previous version.
+
+        Args:
+            name: The name of the software component to roll back.
+
+        JSON-RPC method: machine.update.rollback
+        """
+        return await self._request("POST", "/machine/update/rollback", json={"name": name})  # type: ignore[attr-defined]
 
     async def machine_update_full(self) -> Any:
         """Perform a full update

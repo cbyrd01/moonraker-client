@@ -397,9 +397,10 @@ class AsyncFilesMixin:
 
         if isinstance(file, (str, Path)):
             file_path = Path(file)
-            with open(file_path, "rb") as f:
-                files = {"file": (file_path.name, f, "application/octet-stream")}
-                return await self._request("POST", "/server/files/upload", data=data, files=files)  # type: ignore[attr-defined]
+            # Read bytes eagerly so the file handle is not held across await
+            content = file_path.read_bytes()
+            files = {"file": (file_path.name, content, "application/octet-stream")}
+            return await self._request("POST", "/server/files/upload", data=data, files=files)  # type: ignore[attr-defined]
         else:
             name = getattr(file, "name", "upload")
             if isinstance(name, (str, Path)):
