@@ -15,6 +15,8 @@ from moonraker_client.exceptions import (
 
 __version__ = "0.1.0"
 
+from moonraker_client import helpers
+
 __all__ = [
     "AsyncMoonrakerClient",
     "MoonrakerClient",
@@ -23,4 +25,5 @@ __all__ = [
     "MoonrakerConnectionError",
     "MoonrakerError",
     "MoonrakerTimeoutError",
+    "helpers",
 ]
