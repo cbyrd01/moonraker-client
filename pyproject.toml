@@ -40,9 +40,9 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/cbyrd01/moonraker-api-client"
-Repository = "https://github.com/cbyrd01/moonraker-api-client"
-Issues = "https://github.com/cbyrd01/moonraker-api-client/issues"
+Homepage = "https://github.com/cbyrd01/moonraker-client"
+Repository = "https://github.com/cbyrd01/moonraker-client"
+Issues = "https://github.com/cbyrd01/moonraker-client/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/moonraker_client"]

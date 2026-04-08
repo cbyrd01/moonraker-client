@@ -141,8 +141,8 @@ See the [docs/](docs/) directory for complete documentation:
 ## Development
 
 ```bash
-git clone https://github.com/cbyrd01/moonraker-api-client.git
-cd moonraker-api-client
+git clone https://github.com/cbyrd01/moonraker-client.git
+cd moonraker-client
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 

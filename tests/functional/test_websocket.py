@@ -38,7 +38,7 @@ class TestWebSocketConnect:
             client_name="moonraker-client-test",
             version="0.1.0",
             client_type="web",
-            url="https://github.com/cbyrd01/moonraker-api-client",
+            url="https://github.com/cbyrd01/moonraker-client",
         )
         assert "connection_id" in result
 
