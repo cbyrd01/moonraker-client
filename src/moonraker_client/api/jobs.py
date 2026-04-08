@@ -91,6 +91,16 @@ class JobsMixin:
         body["job_id"] = job_id
         return self._request("POST", "/server/job_queue/jump", json=body)
 
+    def server_jobqueue_delete(self, job_ids: list[str]) -> Any:
+        """Delete job(s) from the queue.
+
+        Args:
+            job_ids: List of job IDs to remove from the queue.
+
+        JSON-RPC method: server.job_queue.delete_job
+        """
+        return self._request("DELETE", "/server/job_queue/job", json={"job_ids": job_ids})  # type: ignore[attr-defined]
+
 
 class AsyncJobsMixin:
     """Asynchronous jobs API methods."""
@@ -174,3 +184,13 @@ class AsyncJobsMixin:
         body: dict[str, Any] = {}
         body["job_id"] = job_id
         return await self._request("POST", "/server/job_queue/jump", json=body)
+
+    async def server_jobqueue_delete(self, job_ids: list[str]) -> Any:
+        """Delete job(s) from the queue.
+
+        Args:
+            job_ids: List of job IDs to remove from the queue.
+
+        JSON-RPC method: server.job_queue.delete_job
+        """
+        return await self._request("DELETE", "/server/job_queue/job", json={"job_ids": job_ids})  # type: ignore[attr-defined]
