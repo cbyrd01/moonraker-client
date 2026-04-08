@@ -194,9 +194,10 @@ class FilesMixin:
 
         if isinstance(file, (str, Path)):
             file_path = Path(file)
-            with open(file_path, "rb") as f:
-                files = {"file": (file_path.name, f, "application/octet-stream")}
-                return self._request("POST", "/server/files/upload", data=data, files=files)  # type: ignore[attr-defined]
+            # Read bytes eagerly for cross-platform safety (Windows file locking)
+            content = file_path.read_bytes()
+            files = {"file": (file_path.name, content, "application/octet-stream")}
+            return self._request("POST", "/server/files/upload", data=data, files=files)  # type: ignore[attr-defined]
         else:
             name = getattr(file, "name", "upload")
             if isinstance(name, (str, Path)):
