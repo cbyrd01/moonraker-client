@@ -74,7 +74,8 @@ def parse_jsonrpc_message(raw: str | bytes) -> dict[str, Any]:
     """
     if isinstance(raw, bytes):
         raw = raw.decode("utf-8")
-    return json.loads(raw)
+    result: dict[str, Any] = json.loads(raw)
+    return result
 
 
 def is_notification(message: dict[str, Any]) -> bool:

@@ -146,7 +146,7 @@ def is_printing(client: MoonrakerClient) -> bool:
     """
     try:
         result = client.printer_objects_query({"print_stats": ["state"]})
-        state = result.get("status", {}).get("print_stats", {}).get("state", "")
+        state: str = result.get("status", {}).get("print_stats", {}).get("state", "")
         return state == "printing"
     except MoonrakerError:
         return False

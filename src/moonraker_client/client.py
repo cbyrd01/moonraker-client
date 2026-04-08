@@ -234,7 +234,7 @@ class AsyncMoonrakerClient(
         Returns:
             Connection info from Moonraker.
         """
-        return await self.send_jsonrpc(
+        result: dict[str, Any] = await self.send_jsonrpc(
             "server.connection.identify",
             {
                 "client_name": client_name,
@@ -243,6 +243,7 @@ class AsyncMoonrakerClient(
                 "url": url,
             },
         )
+        return result
 
     async def subscribe_objects(self, objects: dict[str, list[str] | None]) -> dict[str, Any]:
         """Subscribe to printer object status updates over WebSocket.
@@ -254,12 +255,13 @@ class AsyncMoonrakerClient(
         Returns:
             Initial status snapshot for the subscribed objects.
         """
-        return await self.send_jsonrpc(
+        result: dict[str, Any] = await self.send_jsonrpc(
             "printer.objects.subscribe",
             {
                 "objects": objects,
             },
         )
+        return result
 
     def on(self, event: str, handler: Callable[..., Any]) -> None:
         """Register a handler for WebSocket notification events.
