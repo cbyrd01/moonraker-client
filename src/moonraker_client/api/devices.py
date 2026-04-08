@@ -1,6 +1,7 @@
-"""API endpoints for Devices operations.
+"""Devices API endpoint mixins.
 
-Auto-generated from OpenAPI spec. Hand-tune as needed.
+Covers /machine/device_power/*, /machine/wled/*, /server/sensors/* endpoints.
+Generated from OpenAPI spec and hand-tuned.
 """
 
 from __future__ import annotations
@@ -11,452 +12,208 @@ from typing import Any
 class DevicesMixin:
     """Synchronous devices API methods."""
 
-    def machine_devicepower_devices(self) -> Any:
-        """Get Device List
+    def power_devices_list(self) -> list[dict[str, Any]]:
+        """List configured power devices.
 
         JSON-RPC method: machine.device_power.devices
         """
-        return self._request("GET", "/machine/device_power/devices")
+        return self._request("GET", "/machine/device_power/devices")  # type: ignore[attr-defined]
 
-    def machine_devicepower_device(self) -> Any:
-        """Get Device State
+    def power_device_status(self, device: str) -> dict[str, Any]:
+        """Get the status of a power device.
 
-        Requests the device state for a single configured device.
+        Args:
+            device: The name of the device to query.
 
         JSON-RPC method: machine.device_power.get_device
         """
-        return self._request("GET", "/machine/device_power/device")
+        return self._request("GET", "/machine/device_power/device", params={"device": device})  # type: ignore[attr-defined]
 
-    def machine_devicepower_status(self, device: str | None = None) -> Any:
-        """Get Batch Device Status
-
-        Get power status for the requested devices.  At least one device must be
-        specified.
-        
-        **Note:** The strangeness of this parameter specification is an artifact
-        from an early attempt to simplify the query string and maintain
-        compatibility with JSON parameters.
+    def power_device_set(self, device: str, action: str) -> dict[str, Any]:
+        """Set the state of a power device.
 
         Args:
-            device: (Dynamic parameter name) There may be multiple devices specified, where the keys (optional)
+            device: The name of the device.
+            action: The action to take ("on" or "off").
 
-        JSON-RPC method: machine.device_power.status
+        JSON-RPC method: machine.device_power.post_device
         """
-        params: dict[str, Any] = {}
-        if device is not None:
-            params["device"] = device
-        return self._request("GET", "/machine/device_power/status", params=params)
+        return self._request("POST", "/machine/device_power/device", json={device: action})  # type: ignore[attr-defined]
 
-    def machine_devicepower_on(self, *device*: Any | None = None) -> Any:
-        """Batch Power On Devices
+    def power_on(self, **devices: Any) -> dict[str, str]:
+        """Turn on power devices.
 
-        Power on the requested devices.  At least one device must be
-        specified.
-        
-        **Note:** The strangeness of this parameter specification is an artifact
-        from an early attempt to simplify query string parameters and maintain
-        compatibility with JSON parameters.
-
-        Args:
-            *device*: There may be multiple devices specified, where the keys the requested device nam (optional)
+        Pass device names as keyword arguments. E.g. power_on(printer=None)
 
         JSON-RPC method: machine.device_power.on
         """
-        body: dict[str, Any] = {}
-        if *device* is not None:
-            body["*device*"] = *device*
-        return self._request("POST", "/machine/device_power/on", json=body)
+        return self._request("POST", "/machine/device_power/on", json=devices)  # type: ignore[attr-defined]
 
-    def machine_devicepower_off(self, *device*: Any | None = None) -> Any:
-        """Batch Power Off Devices
+    def power_off(self, **devices: Any) -> dict[str, str]:
+        """Turn off power devices.
 
-        Power off the requested devices.  At least one device must be
-        specified.
-        
-        **Note:** The strangeness of this parameter specification is an artifact
-        from an early attempt to simplify query string parameters and maintain
-        compatibility with JSON parameters.
-
-        Args:
-            *device*: There may be multiple devices specified, where the keys the requested device nam (optional)
+        Pass device names as keyword arguments. E.g. power_off(printer=None)
 
         JSON-RPC method: machine.device_power.off
         """
-        body: dict[str, Any] = {}
-        if *device* is not None:
-            body["*device*"] = *device*
-        return self._request("POST", "/machine/device_power/off", json=body)
+        return self._request("POST", "/machine/device_power/off", json=devices)  # type: ignore[attr-defined]
 
-    def machine_wled_strips(self) -> Any:
-        """Get strips
+    def wled_strips(self) -> dict[str, Any]:
+        """List configured WLED strips.
 
         JSON-RPC method: machine.wled.strips
         """
-        return self._request("GET", "/machine/wled/strips")
+        return self._request("GET", "/machine/wled/strips")  # type: ignore[attr-defined]
 
-    def machine_wled_status(self, strip: str | None = None) -> Any:
-        """Get strip status
+    def wled_status(self, strip: str | None = None) -> dict[str, Any]:
+        """Get WLED strip status.
 
         Args:
-            strip: (Dynamic parameter name) There may be multiple strips specified, where the keys  (optional)
+            strip: Strip name to query. If None, returns all.
 
         JSON-RPC method: machine.wled.status
         """
         params: dict[str, Any] = {}
         if strip is not None:
             params["strip"] = strip
-        return self._request("GET", "/machine/wled/status", params=params)
+        return self._request("GET", "/machine/wled/status", params=params)  # type: ignore[attr-defined]
 
-    def machine_wled_on(self) -> Any:
-        """Turn strip on
+    def wled_on(self, strip: str, preset: int | None = None, brightness: int | None = None) -> dict[str, Any]:
+        """Turn on a WLED strip.
 
-        Turns the specified strips on to the initial colors or initial preset.
+        Args:
+            strip: Name of the strip.
+            preset: WLED preset to activate.
+            brightness: Brightness level (0-255).
 
         JSON-RPC method: machine.wled.on
         """
-        return self._request("POST", "/machine/wled/on")
+        body: dict[str, Any] = {"strip": strip}
+        if preset is not None:
+            body["preset"] = preset
+        if brightness is not None:
+            body["brightness"] = brightness
+        return self._request("POST", "/machine/wled/on", json=body)  # type: ignore[attr-defined]
 
-    def machine_wled_off(self, *strip*: Any | None = None) -> Any:
-        """Turn strip off
-
-        Turns off all specified strips.
+    def wled_off(self, strip: str) -> dict[str, Any]:
+        """Turn off a WLED strip.
 
         Args:
-            *strip*: There may be multiple strips specified, where the keys the requested strip names (optional)
+            strip: Name of the strip.
 
         JSON-RPC method: machine.wled.off
         """
-        body: dict[str, Any] = {}
-        if *strip* is not None:
-            body["*strip*"] = *strip*
-        return self._request("POST", "/machine/wled/off", json=body)
+        return self._request("POST", "/machine/wled/off", json={"strip": strip})  # type: ignore[attr-defined]
 
-    def machine_wled_toggle(self, *strip*: Any | None = None) -> Any:
-        """Toggle strip on/off state
-
-        Toggles the current enabled state for the requested strips.
+    def wled_toggle(self, strip: str) -> dict[str, Any]:
+        """Toggle a WLED strip on/off.
 
         Args:
-            *strip*: There may be multiple strips specified, where the keys the requested strip names (optional)
+            strip: Name of the strip.
 
         JSON-RPC method: machine.wled.toggle
         """
-        body: dict[str, Any] = {}
-        if *strip* is not None:
-            body["*strip*"] = *strip*
-        return self._request("POST", "/machine/wled/toggle", json=body)
+        return self._request("POST", "/machine/wled/toggle", json={"strip": strip})  # type: ignore[attr-defined]
 
-    def machine_wled_strip(self) -> Any:
-        """Get individual strip state
-
-        JSON-RPC method: machine.wled.get_strip
-        """
-        return self._request("GET", "/machine/wled/strip")
-
-    def server_sensors_list(self, extended: bool = False) -> Any:
-        """Get Sensor List
-
-        Args:
-            extended: When set to `true` the status for each sensor will include `parameter_info` and  (optional)
+    def sensors_list(self) -> dict[str, Any]:
+        """List configured sensors.
 
         JSON-RPC method: server.sensors.list
         """
-        params: dict[str, Any] = {}
-        if extended is not None:
-            params["extended"] = extended
-        return self._request("GET", "/server/sensors/list", params=params)
+        return self._request("GET", "/server/sensors/list")  # type: ignore[attr-defined]
 
-    def server_sensors_info(self, sensor: str, extended: bool = False) -> Any:
-        """Get Sensor Information
-
-        Returns the status for a single configured sensor.
+    def sensors_info(self, sensor: str | None = None) -> dict[str, Any]:
+        """Get sensor info.
 
         Args:
-            sensor: The ID of the requested sensor.
-            extended: When set to `true` the status for the sensor will include `parameter_info` and ` (optional)
+            sensor: Sensor name. If None, returns all.
 
         JSON-RPC method: server.sensors.info
         """
         params: dict[str, Any] = {}
-        params["sensor"] = sensor
-        if extended is not None:
-            params["extended"] = extended
-        return self._request("GET", "/server/sensors/info", params=params)
+        if sensor is not None:
+            params["sensor"] = sensor
+        return self._request("GET", "/server/sensors/info", params=params)  # type: ignore[attr-defined]
 
-    def server_sensors_measurements(self) -> Any:
-        """Get Batch Sensor Measurements
+    def sensors_measurements(self, sensor: str | None = None) -> dict[str, Any]:
+        """Get sensor measurements.
 
-        Returns recorded measurements for all sensors.
+        Args:
+            sensor: Sensor name. If None, returns all.
 
         JSON-RPC method: server.sensors.measurements
         """
-        return self._request("GET", "/server/sensors/measurements")
-
-    def server_mqtt_publish(self, topic: str, payload: dict[str, Any] | None = None, qos: int | None = None, retain: bool = False, timeout: float | None = None) -> Any:
-        """Publish a topic
-
-        Args:
-            topic: The topic to publish to the network.
-            payload: The payload to send with the topic. May be a boolean, float, integer, object, or (optional)
-            qos: The QOS level to use when publishing a topic.  Valid range is 0-2. (optional)
-            retain: When set to `true` the topic's retain flag is set. (optional)
-            timeout: A timeout, in seconds, in which Moonraker will wait for acknowledgement from the (optional)
-
-        JSON-RPC method: server.mqtt.publish
-        """
-        body: dict[str, Any] = {}
-        body["topic"] = topic
-        if payload is not None:
-            body["payload"] = payload
-        if qos is not None:
-            body["qos"] = qos
-        if retain is not None:
-            body["retain"] = retain
-        if timeout is not None:
-            body["timeout"] = timeout
-        return self._request("POST", "/server/mqtt/publish", json=body)
-
-    def server_mqtt_subscribe(self, topic: str, qos: int | None = None, timeout: float | None = None) -> Any:
-        """Subscribe to a topic
-
-        Args:
-            topic: The topic to subscribe to.  Wildcards are **not** allowed.
-            qos: The QOS level to use for the subscription. Valid range is 0-2. (optional)
-            timeout: A timeout, in seconds, to wait until a response is received.  The request will r (optional)
-
-        JSON-RPC method: server.mqtt.subscribe
-        """
-        body: dict[str, Any] = {}
-        body["topic"] = topic
-        if qos is not None:
-            body["qos"] = qos
-        if timeout is not None:
-            body["timeout"] = timeout
-        return self._request("POST", "/server/mqtt/subscribe", json=body)
+        params: dict[str, Any] = {}
+        if sensor is not None:
+            params["sensor"] = sensor
+        return self._request("GET", "/server/sensors/measurements", params=params)  # type: ignore[attr-defined]
 
 
 class AsyncDevicesMixin:
     """Asynchronous devices API methods."""
 
-    async def machine_devicepower_devices(self) -> Any:
-        """Get Device List
+    async def power_devices_list(self) -> list[dict[str, Any]]:
+        """List configured power devices."""
+        return await self._request("GET", "/machine/device_power/devices")  # type: ignore[attr-defined]
 
-        JSON-RPC method: machine.device_power.devices
-        """
-        return await self._request("GET", "/machine/device_power/devices")
+    async def power_device_status(self, device: str) -> dict[str, Any]:
+        """Get the status of a power device."""
+        return await self._request("GET", "/machine/device_power/device", params={"device": device})  # type: ignore[attr-defined]
 
-    async def machine_devicepower_device(self) -> Any:
-        """Get Device State
+    async def power_device_set(self, device: str, action: str) -> dict[str, Any]:
+        """Set the state of a power device."""
+        return await self._request("POST", "/machine/device_power/device", json={device: action})  # type: ignore[attr-defined]
 
-        Requests the device state for a single configured device.
+    async def power_on(self, **devices: Any) -> dict[str, str]:
+        """Turn on power devices."""
+        return await self._request("POST", "/machine/device_power/on", json=devices)  # type: ignore[attr-defined]
 
-        JSON-RPC method: machine.device_power.get_device
-        """
-        return await self._request("GET", "/machine/device_power/device")
+    async def power_off(self, **devices: Any) -> dict[str, str]:
+        """Turn off power devices."""
+        return await self._request("POST", "/machine/device_power/off", json=devices)  # type: ignore[attr-defined]
 
-    async def machine_devicepower_status(self, device: str | None = None) -> Any:
-        """Get Batch Device Status
+    async def wled_strips(self) -> dict[str, Any]:
+        """List configured WLED strips."""
+        return await self._request("GET", "/machine/wled/strips")  # type: ignore[attr-defined]
 
-        Get power status for the requested devices.  At least one device must be
-        specified.
-        
-        **Note:** The strangeness of this parameter specification is an artifact
-        from an early attempt to simplify the query string and maintain
-        compatibility with JSON parameters.
-
-        Args:
-            device: (Dynamic parameter name) There may be multiple devices specified, where the keys (optional)
-
-        JSON-RPC method: machine.device_power.status
-        """
-        params: dict[str, Any] = {}
-        if device is not None:
-            params["device"] = device
-        return await self._request("GET", "/machine/device_power/status", params=params)
-
-    async def machine_devicepower_on(self, *device*: Any | None = None) -> Any:
-        """Batch Power On Devices
-
-        Power on the requested devices.  At least one device must be
-        specified.
-        
-        **Note:** The strangeness of this parameter specification is an artifact
-        from an early attempt to simplify query string parameters and maintain
-        compatibility with JSON parameters.
-
-        Args:
-            *device*: There may be multiple devices specified, where the keys the requested device nam (optional)
-
-        JSON-RPC method: machine.device_power.on
-        """
-        body: dict[str, Any] = {}
-        if *device* is not None:
-            body["*device*"] = *device*
-        return await self._request("POST", "/machine/device_power/on", json=body)
-
-    async def machine_devicepower_off(self, *device*: Any | None = None) -> Any:
-        """Batch Power Off Devices
-
-        Power off the requested devices.  At least one device must be
-        specified.
-        
-        **Note:** The strangeness of this parameter specification is an artifact
-        from an early attempt to simplify query string parameters and maintain
-        compatibility with JSON parameters.
-
-        Args:
-            *device*: There may be multiple devices specified, where the keys the requested device nam (optional)
-
-        JSON-RPC method: machine.device_power.off
-        """
-        body: dict[str, Any] = {}
-        if *device* is not None:
-            body["*device*"] = *device*
-        return await self._request("POST", "/machine/device_power/off", json=body)
-
-    async def machine_wled_strips(self) -> Any:
-        """Get strips
-
-        JSON-RPC method: machine.wled.strips
-        """
-        return await self._request("GET", "/machine/wled/strips")
-
-    async def machine_wled_status(self, strip: str | None = None) -> Any:
-        """Get strip status
-
-        Args:
-            strip: (Dynamic parameter name) There may be multiple strips specified, where the keys  (optional)
-
-        JSON-RPC method: machine.wled.status
-        """
+    async def wled_status(self, strip: str | None = None) -> dict[str, Any]:
+        """Get WLED strip status."""
         params: dict[str, Any] = {}
         if strip is not None:
             params["strip"] = strip
-        return await self._request("GET", "/machine/wled/status", params=params)
+        return await self._request("GET", "/machine/wled/status", params=params)  # type: ignore[attr-defined]
 
-    async def machine_wled_on(self) -> Any:
-        """Turn strip on
+    async def wled_on(self, strip: str, preset: int | None = None, brightness: int | None = None) -> dict[str, Any]:
+        """Turn on a WLED strip."""
+        body: dict[str, Any] = {"strip": strip}
+        if preset is not None:
+            body["preset"] = preset
+        if brightness is not None:
+            body["brightness"] = brightness
+        return await self._request("POST", "/machine/wled/on", json=body)  # type: ignore[attr-defined]
 
-        Turns the specified strips on to the initial colors or initial preset.
+    async def wled_off(self, strip: str) -> dict[str, Any]:
+        """Turn off a WLED strip."""
+        return await self._request("POST", "/machine/wled/off", json={"strip": strip})  # type: ignore[attr-defined]
 
-        JSON-RPC method: machine.wled.on
-        """
-        return await self._request("POST", "/machine/wled/on")
+    async def wled_toggle(self, strip: str) -> dict[str, Any]:
+        """Toggle a WLED strip on/off."""
+        return await self._request("POST", "/machine/wled/toggle", json={"strip": strip})  # type: ignore[attr-defined]
 
-    async def machine_wled_off(self, *strip*: Any | None = None) -> Any:
-        """Turn strip off
+    async def sensors_list(self) -> dict[str, Any]:
+        """List configured sensors."""
+        return await self._request("GET", "/server/sensors/list")  # type: ignore[attr-defined]
 
-        Turns off all specified strips.
-
-        Args:
-            *strip*: There may be multiple strips specified, where the keys the requested strip names (optional)
-
-        JSON-RPC method: machine.wled.off
-        """
-        body: dict[str, Any] = {}
-        if *strip* is not None:
-            body["*strip*"] = *strip*
-        return await self._request("POST", "/machine/wled/off", json=body)
-
-    async def machine_wled_toggle(self, *strip*: Any | None = None) -> Any:
-        """Toggle strip on/off state
-
-        Toggles the current enabled state for the requested strips.
-
-        Args:
-            *strip*: There may be multiple strips specified, where the keys the requested strip names (optional)
-
-        JSON-RPC method: machine.wled.toggle
-        """
-        body: dict[str, Any] = {}
-        if *strip* is not None:
-            body["*strip*"] = *strip*
-        return await self._request("POST", "/machine/wled/toggle", json=body)
-
-    async def machine_wled_strip(self) -> Any:
-        """Get individual strip state
-
-        JSON-RPC method: machine.wled.get_strip
-        """
-        return await self._request("GET", "/machine/wled/strip")
-
-    async def server_sensors_list(self, extended: bool = False) -> Any:
-        """Get Sensor List
-
-        Args:
-            extended: When set to `true` the status for each sensor will include `parameter_info` and  (optional)
-
-        JSON-RPC method: server.sensors.list
-        """
+    async def sensors_info(self, sensor: str | None = None) -> dict[str, Any]:
+        """Get sensor info."""
         params: dict[str, Any] = {}
-        if extended is not None:
-            params["extended"] = extended
-        return await self._request("GET", "/server/sensors/list", params=params)
+        if sensor is not None:
+            params["sensor"] = sensor
+        return await self._request("GET", "/server/sensors/info", params=params)  # type: ignore[attr-defined]
 
-    async def server_sensors_info(self, sensor: str, extended: bool = False) -> Any:
-        """Get Sensor Information
-
-        Returns the status for a single configured sensor.
-
-        Args:
-            sensor: The ID of the requested sensor.
-            extended: When set to `true` the status for the sensor will include `parameter_info` and ` (optional)
-
-        JSON-RPC method: server.sensors.info
-        """
+    async def sensors_measurements(self, sensor: str | None = None) -> dict[str, Any]:
+        """Get sensor measurements."""
         params: dict[str, Any] = {}
-        params["sensor"] = sensor
-        if extended is not None:
-            params["extended"] = extended
-        return await self._request("GET", "/server/sensors/info", params=params)
-
-    async def server_sensors_measurements(self) -> Any:
-        """Get Batch Sensor Measurements
-
-        Returns recorded measurements for all sensors.
-
-        JSON-RPC method: server.sensors.measurements
-        """
-        return await self._request("GET", "/server/sensors/measurements")
-
-    async def server_mqtt_publish(self, topic: str, payload: dict[str, Any] | None = None, qos: int | None = None, retain: bool = False, timeout: float | None = None) -> Any:
-        """Publish a topic
-
-        Args:
-            topic: The topic to publish to the network.
-            payload: The payload to send with the topic. May be a boolean, float, integer, object, or (optional)
-            qos: The QOS level to use when publishing a topic.  Valid range is 0-2. (optional)
-            retain: When set to `true` the topic's retain flag is set. (optional)
-            timeout: A timeout, in seconds, in which Moonraker will wait for acknowledgement from the (optional)
-
-        JSON-RPC method: server.mqtt.publish
-        """
-        body: dict[str, Any] = {}
-        body["topic"] = topic
-        if payload is not None:
-            body["payload"] = payload
-        if qos is not None:
-            body["qos"] = qos
-        if retain is not None:
-            body["retain"] = retain
-        if timeout is not None:
-            body["timeout"] = timeout
-        return await self._request("POST", "/server/mqtt/publish", json=body)
-
-    async def server_mqtt_subscribe(self, topic: str, qos: int | None = None, timeout: float | None = None) -> Any:
-        """Subscribe to a topic
-
-        Args:
-            topic: The topic to subscribe to.  Wildcards are **not** allowed.
-            qos: The QOS level to use for the subscription. Valid range is 0-2. (optional)
-            timeout: A timeout, in seconds, to wait until a response is received.  The request will r (optional)
-
-        JSON-RPC method: server.mqtt.subscribe
-        """
-        body: dict[str, Any] = {}
-        body["topic"] = topic
-        if qos is not None:
-            body["qos"] = qos
-        if timeout is not None:
-            body["timeout"] = timeout
-        return await self._request("POST", "/server/mqtt/subscribe", json=body)
+        if sensor is not None:
+            params["sensor"] = sensor
+        return await self._request("GET", "/server/sensors/measurements", params=params)  # type: ignore[attr-defined]

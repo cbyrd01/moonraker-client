@@ -12,11 +12,18 @@ import httpx
 
 from moonraker_client._base import handle_request_error, unwrap_response
 from moonraker_client._transport import AsyncHttpTransport, HttpTransport
+from moonraker_client.api.announcements import AsyncAnnouncementsMixin, AnnouncementsMixin
+from moonraker_client.api.auth import AsyncAuthMixin, AuthMixin
+from moonraker_client.api.database import AsyncDatabaseMixin, DatabaseMixin
+from moonraker_client.api.devices import AsyncDevicesMixin, DevicesMixin
 from moonraker_client.api.files import AsyncFilesMixin, FilesMixin
 from moonraker_client.api.history import AsyncHistoryMixin, HistoryMixin
 from moonraker_client.api.jobs import AsyncJobsMixin, JobsMixin
+from moonraker_client.api.machine import AsyncMachineMixin, MachineMixin
 from moonraker_client.api.printer import AsyncPrinterMixin, PrinterMixin
 from moonraker_client.api.server import AsyncServerMixin, ServerMixin
+from moonraker_client.api.updates import AsyncUpdatesMixin, UpdatesMixin
+from moonraker_client.api.webcams import AsyncWebcamsMixin, WebcamsMixin
 
 
 class MoonrakerClient(
@@ -25,6 +32,13 @@ class MoonrakerClient(
     FilesMixin,
     HistoryMixin,
     JobsMixin,
+    MachineMixin,
+    AuthMixin,
+    DatabaseMixin,
+    UpdatesMixin,
+    DevicesMixin,
+    WebcamsMixin,
+    AnnouncementsMixin,
 ):
     """Synchronous client for the Moonraker API.
 
@@ -91,6 +105,13 @@ class AsyncMoonrakerClient(
     AsyncFilesMixin,
     AsyncHistoryMixin,
     AsyncJobsMixin,
+    AsyncMachineMixin,
+    AsyncAuthMixin,
+    AsyncDatabaseMixin,
+    AsyncUpdatesMixin,
+    AsyncDevicesMixin,
+    AsyncWebcamsMixin,
+    AsyncAnnouncementsMixin,
 ):
     """Asynchronous client for the Moonraker API.
 
