@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, Any, BinaryIO
 from moonraker_client.exceptions import MoonrakerError
 
 if TYPE_CHECKING:
-    from moonraker_client.client import MoonrakerClient
+    from moonraker_client.client import AsyncMoonrakerClient, MoonrakerClient
 
 
 @dataclass
@@ -387,3 +387,104 @@ def restart_firmware(
             # Server may be temporarily unreachable during firmware restart
             continue
     return False
+
+
+# ---------------------------------------------------------------------------
+# Async variants of key helpers
+# ---------------------------------------------------------------------------
+
+
+async def async_get_printer_status(client: AsyncMoonrakerClient) -> PrinterStatus:
+    """Async version of get_printer_status."""
+    printer_info = await client.printer_info()
+    server_info = await client.server_info()
+    temps = await async_get_temperatures(client)
+
+    filename = None
+    progress = 0.0
+    print_duration = 0.0
+    try:
+        result = await client.printer_objects_query(
+            {"print_stats": None, "virtual_sdcard": None}
+        )
+        status = result.get("status", {})
+        print_stats = status.get("print_stats", {})
+        vsd = status.get("virtual_sdcard", {})
+        filename = print_stats.get("filename") or None
+        progress = vsd.get("progress", 0.0)
+        print_duration = print_stats.get("print_duration", 0.0)
+    except MoonrakerError:
+        pass
+
+    return PrinterStatus(
+        state=printer_info.get("state", "unknown"),
+        state_message=printer_info.get("state_message", ""),
+        hostname=printer_info.get("hostname", ""),
+        software_version=printer_info.get("software_version", ""),
+        filename=filename,
+        progress=progress,
+        print_duration=print_duration,
+        temperatures=temps,
+        klippy_connected=server_info.get("klippy_connected", False),
+        klippy_state=server_info.get("klippy_state", "unknown"),
+    )
+
+
+async def async_get_temperatures(client: AsyncMoonrakerClient) -> dict[str, TemperatureReading]:
+    """Async version of get_temperatures."""
+    try:
+        result = await client.printer_objects_query(
+            {
+                "extruder": ["temperature", "target", "power"],
+                "heater_bed": ["temperature", "target", "power"],
+            }
+        )
+    except MoonrakerError:
+        return {}
+
+    status = result.get("status", {})
+    temps: dict[str, TemperatureReading] = {}
+    for name, data in status.items():
+        if isinstance(data, dict) and "temperature" in data:
+            temps[name] = TemperatureReading(
+                current=data.get("temperature", 0.0),
+                target=data.get("target", 0.0),
+                power=data.get("power", 0.0),
+            )
+    return temps
+
+
+async def async_get_print_progress(client: AsyncMoonrakerClient) -> PrintProgress | None:
+    """Async version of get_print_progress."""
+    try:
+        result = await client.printer_objects_query(
+            {"print_stats": None, "virtual_sdcard": None}
+        )
+    except MoonrakerError:
+        return None
+
+    status = result.get("status", {})
+    print_stats = status.get("print_stats", {})
+    vsd = status.get("virtual_sdcard", {})
+
+    filename = print_stats.get("filename", "")
+    if not filename:
+        return None
+
+    return PrintProgress(
+        filename=filename,
+        progress_pct=round(vsd.get("progress", 0.0) * 100, 1),
+        elapsed=print_stats.get("print_duration", 0.0),
+        state=print_stats.get("state", "unknown"),
+        message=print_stats.get("message", ""),
+    )
+
+
+async def async_is_printing(client: AsyncMoonrakerClient) -> bool:
+    """Async version of is_printing."""
+    try:
+        result = await client.printer_objects_query({"print_stats": ["state"]})
+        state: str = result.get("status", {}).get("print_stats", {}).get("state", "")
+        return state == "printing"
+    except MoonrakerError:
+        return False

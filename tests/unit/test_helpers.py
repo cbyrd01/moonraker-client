@@ -41,7 +41,9 @@ class TestGetTemperatures:
         assert temps["heater_bed"].power == 0.1
 
     def test_returns_empty_on_error(self, mock_client: MagicMock) -> None:
-        mock_client.printer_objects_query.side_effect = MoonrakerConnectionError("connection failed")
+        mock_client.printer_objects_query.side_effect = MoonrakerConnectionError(
+            "connection failed"
+        )
         temps = get_temperatures(mock_client)
         assert temps == {}
 
