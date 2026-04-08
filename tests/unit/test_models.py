@@ -10,9 +10,7 @@ from moonraker_client.models import (
     JobHistoryTotals,
     ObjectQueryResponse,
     PrintStats,
-    ProcStatsResponse,
     SensorMeasurements,
-    Sys,
     UpdateStatus,
     WebcamEntry,
 )

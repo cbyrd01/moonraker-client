@@ -9,7 +9,7 @@ from __future__ import annotations
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, BinaryIO, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, BinaryIO
 
 if TYPE_CHECKING:
     from moonraker_client.client import MoonrakerClient
@@ -72,10 +72,12 @@ def get_printer_status(client: MoonrakerClient) -> PrinterStatus:
     progress = 0.0
     print_duration = 0.0
     try:
-        result = client.printer_objects_query({
-            "print_stats": None,
-            "virtual_sdcard": None,
-        })
+        result = client.printer_objects_query(
+            {
+                "print_stats": None,
+                "virtual_sdcard": None,
+            }
+        )
         status = result.get("status", {})
         print_stats = status.get("print_stats", {})
         vsd = status.get("virtual_sdcard", {})
@@ -110,10 +112,12 @@ def get_temperatures(client: MoonrakerClient) -> dict[str, TemperatureReading]:
         Typical keys: "extruder", "heater_bed".
     """
     try:
-        result = client.printer_objects_query({
-            "extruder": ["temperature", "target", "power"],
-            "heater_bed": ["temperature", "target", "power"],
-        })
+        result = client.printer_objects_query(
+            {
+                "extruder": ["temperature", "target", "power"],
+                "heater_bed": ["temperature", "target", "power"],
+            }
+        )
     except Exception:
         return {}
 
@@ -156,10 +160,12 @@ def get_print_progress(client: MoonrakerClient) -> PrintProgress | None:
         PrintProgress if a file is loaded, None otherwise.
     """
     try:
-        result = client.printer_objects_query({
-            "print_stats": None,
-            "virtual_sdcard": None,
-        })
+        result = client.printer_objects_query(
+            {
+                "print_stats": None,
+                "virtual_sdcard": None,
+            }
+        )
     except Exception:
         return None
 
@@ -293,9 +299,7 @@ def wait_for_temps(
     return False
 
 
-def list_gcode_files(
-    client: MoonrakerClient, sort_by: str = "modified"
-) -> list[dict[str, Any]]:
+def list_gcode_files(client: MoonrakerClient, sort_by: str = "modified") -> list[dict[str, Any]]:
     """List gcode files, sorted by the specified field.
 
     Args:
@@ -327,9 +331,7 @@ def upload_gcode(
     Returns:
         Upload response dict with item info.
     """
-    return client.files_upload(
-        local_path, path=remote_path, start_print=start
-    )
+    return client.files_upload(local_path, path=remote_path, start_print=start)
 
 
 def get_system_health(client: MoonrakerClient) -> dict[str, Any]:

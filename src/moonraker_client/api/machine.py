@@ -23,7 +23,7 @@ class MachineMixin:
 
         Commands the Operating System to shutdown.  The following pre-requisites must be
         met to successfully perform this action:
-        
+
         - The `provider` must be `systemd_cli` or `systemd_dbus`.
         - Moonraker must have permission to shutdown the host.
         - Moonraker must not be running inside a container.
@@ -37,7 +37,7 @@ class MachineMixin:
 
         Commands the Operating System to shutdown.  The following pre-requisites must be
         met to successfully perform this action:
-        
+
         - The `provider` must be `systemd_cli` or `systemd_dbus`.
         - Moonraker must have permission to reboot the host.
         - Moonraker must not be running inside a container.
@@ -51,7 +51,7 @@ class MachineMixin:
 
         Commands a service to restart. The following pre-requisites must be
         met to successfully perform this action:
-        
+
         - The `provider` must NOT be `none`.
         - The service must be present in the list of `allowed_services`.
         - Moonraker must have the necessary permissions to manage services.
@@ -70,7 +70,7 @@ class MachineMixin:
 
         Commands a service to stop. The following pre-requisites must be
         met to successfully perform this action:
-        
+
         - The `provider` must NOT be `none`.
         - The service must be present in the list of `allowed_services`.
         - Moonraker must have the necessary permissions to manage services.
@@ -89,7 +89,7 @@ class MachineMixin:
 
         Commands a service to start. The following pre-requisites must be
         met to successfully perform this action:
-        
+
         - The `provider` must NOT be `none`.
         - The service must be present in the list of `allowed_services`.
         - Moonraker must have the necessary permissions to manage services.
@@ -135,7 +135,7 @@ class MachineMixin:
         Sets the sudo password currently used by Moonraker.  The password
         is not persistent across Moonraker restarts.  If Moonraker has one or
         more pending sudo requests they will be processed.
-        
+
         **Note:** This request will return an error if the supplied password is
         incorrect or if any pending sudo requests fail.
 
@@ -178,12 +178,12 @@ class MachineMixin:
         """
         return self._request("GET", "/machine/peripherals/video")
 
-    def machine_peripherals_canbus(self, interface: str = 'can0') -> Any:
+    def machine_peripherals_canbus(self, interface: str = "can0") -> Any:
         """Query Unassigned Canbus UUIDs
 
         Queries the provided canbus interface for unassigned Klipper or Katapult
         node IDs.
-        
+
         !!! Warning
             It is recommended that frontends provide users with an explanation
             of how UUID queries work and the potential pitfalls when querying
@@ -192,14 +192,14 @@ class MachineMixin:
             either Klipper or Katapult has connected to the node, it will be
             assigned a Node ID and therefore will no longer respond to queries.
             A device reset is required to remove the assignment.
-        
+
             When multiple unassigned nodes are on the network, each responds to
             the query at roughly the same time.  This results in arbitration
             errors.  Nodes will retry the send until the response reports success.
             However, nodes track the count of arbitration errors, and once a
             specific threshold is reached they will go into a "bus off" state. A
             device reset is required to reset the counter and recover from "bus off".
-        
+
             For this reason, it is recommended that users only issue a query when
             a single unassigned node is on the network.  If a user does wish to
             query multiple unassigned nodes it is vital that they reset all nodes
@@ -231,7 +231,7 @@ class AsyncMachineMixin:
 
         Commands the Operating System to shutdown.  The following pre-requisites must be
         met to successfully perform this action:
-        
+
         - The `provider` must be `systemd_cli` or `systemd_dbus`.
         - Moonraker must have permission to shutdown the host.
         - Moonraker must not be running inside a container.
@@ -245,7 +245,7 @@ class AsyncMachineMixin:
 
         Commands the Operating System to shutdown.  The following pre-requisites must be
         met to successfully perform this action:
-        
+
         - The `provider` must be `systemd_cli` or `systemd_dbus`.
         - Moonraker must have permission to reboot the host.
         - Moonraker must not be running inside a container.
@@ -259,7 +259,7 @@ class AsyncMachineMixin:
 
         Commands a service to restart. The following pre-requisites must be
         met to successfully perform this action:
-        
+
         - The `provider` must NOT be `none`.
         - The service must be present in the list of `allowed_services`.
         - Moonraker must have the necessary permissions to manage services.
@@ -278,7 +278,7 @@ class AsyncMachineMixin:
 
         Commands a service to stop. The following pre-requisites must be
         met to successfully perform this action:
-        
+
         - The `provider` must NOT be `none`.
         - The service must be present in the list of `allowed_services`.
         - Moonraker must have the necessary permissions to manage services.
@@ -297,7 +297,7 @@ class AsyncMachineMixin:
 
         Commands a service to start. The following pre-requisites must be
         met to successfully perform this action:
-        
+
         - The `provider` must NOT be `none`.
         - The service must be present in the list of `allowed_services`.
         - Moonraker must have the necessary permissions to manage services.
@@ -343,7 +343,7 @@ class AsyncMachineMixin:
         Sets the sudo password currently used by Moonraker.  The password
         is not persistent across Moonraker restarts.  If Moonraker has one or
         more pending sudo requests they will be processed.
-        
+
         **Note:** This request will return an error if the supplied password is
         incorrect or if any pending sudo requests fail.
 
@@ -386,12 +386,12 @@ class AsyncMachineMixin:
         """
         return await self._request("GET", "/machine/peripherals/video")
 
-    async def machine_peripherals_canbus(self, interface: str = 'can0') -> Any:
+    async def machine_peripherals_canbus(self, interface: str = "can0") -> Any:
         """Query Unassigned Canbus UUIDs
 
         Queries the provided canbus interface for unassigned Klipper or Katapult
         node IDs.
-        
+
         !!! Warning
             It is recommended that frontends provide users with an explanation
             of how UUID queries work and the potential pitfalls when querying
@@ -400,14 +400,14 @@ class AsyncMachineMixin:
             either Klipper or Katapult has connected to the node, it will be
             assigned a Node ID and therefore will no longer respond to queries.
             A device reset is required to remove the assignment.
-        
+
             When multiple unassigned nodes are on the network, each responds to
             the query at roughly the same time.  This results in arbitration
             errors.  Nodes will retry the send until the response reports success.
             However, nodes track the count of arbitration errors, and once a
             specific threshold is reached they will go into a "bus off" state. A
             device reset is required to reset the counter and recover from "bus off".
-        
+
             For this reason, it is recommended that users only issue a query when
             a single unassigned node is on the network.  If a user does wish to
             query multiple unassigned nodes it is vital that they reset all nodes

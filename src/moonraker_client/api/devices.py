@@ -78,7 +78,9 @@ class DevicesMixin:
             params["strip"] = strip
         return self._request("GET", "/machine/wled/status", params=params)  # type: ignore[attr-defined]
 
-    def wled_on(self, strip: str, preset: int | None = None, brightness: int | None = None) -> dict[str, Any]:
+    def wled_on(
+        self, strip: str, preset: int | None = None, brightness: int | None = None
+    ) -> dict[str, Any]:
         """Turn on a WLED strip.
 
         Args:
@@ -158,7 +160,9 @@ class AsyncDevicesMixin:
 
     async def power_device_status(self, device: str) -> dict[str, Any]:
         """Get the status of a power device."""
-        return await self._request("GET", "/machine/device_power/device", params={"device": device})  # type: ignore[attr-defined]
+        return await self._request(
+            "GET", "/machine/device_power/device", params={"device": device}
+        )  # type: ignore[attr-defined]
 
     async def power_device_set(self, device: str, action: str) -> dict[str, Any]:
         """Set the state of a power device."""
@@ -183,7 +187,9 @@ class AsyncDevicesMixin:
             params["strip"] = strip
         return await self._request("GET", "/machine/wled/status", params=params)  # type: ignore[attr-defined]
 
-    async def wled_on(self, strip: str, preset: int | None = None, brightness: int | None = None) -> dict[str, Any]:
+    async def wled_on(
+        self, strip: str, preset: int | None = None, brightness: int | None = None
+    ) -> dict[str, Any]:
         """Turn on a WLED strip."""
         body: dict[str, Any] = {"strip": strip}
         if preset is not None:

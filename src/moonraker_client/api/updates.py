@@ -28,13 +28,13 @@ class UpdatesMixin:
         """Refresh update status
 
         Refreshes the internal update state for the requested software.
-        
+
         **Note:** This endpoint will raise 503 error under the following conditions:
-        
+
           - An update is in progress
           - A print is in progress
           - The update manager hasn't completed initialization
-        
+
         **Note:** Applications should use care when calling this method as a refresh
         is CPU intensive and may be time consuming.  Moonraker can be
         configured to refresh state periodically, thus it is recommended
@@ -56,7 +56,7 @@ class UpdatesMixin:
         """Perform an Upgrade
 
         *Added in API Version 1.5.0*
-        
+
         Upgrade to the most recent release of the requested software.
         If an update is requested while a print is in progress then this
         request will return an error.
@@ -91,8 +91,7 @@ class UpdatesMixin:
         return self._request("POST", "/machine/update/recover", json=body)
 
     def machine_update_rollback(self) -> Any:
-        """Rollback to the previous version
-        """
+        """Rollback to the previous version"""
         return self._request("POST", "/machine/update/rollback")
 
     def machine_update_full(self) -> Any:
@@ -100,10 +99,10 @@ class UpdatesMixin:
 
         *Deprecated in API Version 1.5.0, superseded by the*
         *[Upgrade](#perform-an-upgrade) endpoint.*
-        
+
         Attempts to update all registered software.  Updates are performed in the
         following order:
-        
+
         - `system` if enabled
         - All optional software configured in `moonraker.conf`.
         - Klipper
@@ -118,7 +117,7 @@ class UpdatesMixin:
 
         *Deprecated in API Version 1.5.0, superseded by the*
         *[Upgrade](#perform-an-upgrade) endpoint.*
-        
+
         Upgrades to the latest version of Moonraker and restarts
         the service. If an update is requested while a print is in progress then
         this request will return an error.
@@ -132,7 +131,7 @@ class UpdatesMixin:
 
         *Deprecated in API Version 1.5.0, superseded by the*
         *[Upgrade](#perform-an-upgrade) endpoint.*
-        
+
         Upgrades to the latest version of Klipper and restarts
         the service. If an update is requested while a print is in progress
         then this request will return an error.
@@ -146,7 +145,7 @@ class UpdatesMixin:
 
         *Deprecated in API Version 1.5.0, superseded by the*
         *[Upgrade](#perform-an-upgrade) endpoint.*
-        
+
         Update to the most recent release of the requested software.
         If an update is requested while a print is in progress then this
         request will return an error.
@@ -166,7 +165,7 @@ class UpdatesMixin:
 
         *Deprecated in API Version 1.5.0, superseded by the*
         *[Upgrade](#perform-an-upgrade) endpoint.*
-        
+
         Upgrades system packages.  If an update is requested while a print is
         in progress then this request will return an error.
 
@@ -195,13 +194,13 @@ class AsyncUpdatesMixin:
         """Refresh update status
 
         Refreshes the internal update state for the requested software.
-        
+
         **Note:** This endpoint will raise 503 error under the following conditions:
-        
+
           - An update is in progress
           - A print is in progress
           - The update manager hasn't completed initialization
-        
+
         **Note:** Applications should use care when calling this method as a refresh
         is CPU intensive and may be time consuming.  Moonraker can be
         configured to refresh state periodically, thus it is recommended
@@ -223,7 +222,7 @@ class AsyncUpdatesMixin:
         """Perform an Upgrade
 
         *Added in API Version 1.5.0*
-        
+
         Upgrade to the most recent release of the requested software.
         If an update is requested while a print is in progress then this
         request will return an error.
@@ -258,8 +257,7 @@ class AsyncUpdatesMixin:
         return await self._request("POST", "/machine/update/recover", json=body)
 
     async def machine_update_rollback(self) -> Any:
-        """Rollback to the previous version
-        """
+        """Rollback to the previous version"""
         return await self._request("POST", "/machine/update/rollback")
 
     async def machine_update_full(self) -> Any:
@@ -267,10 +265,10 @@ class AsyncUpdatesMixin:
 
         *Deprecated in API Version 1.5.0, superseded by the*
         *[Upgrade](#perform-an-upgrade) endpoint.*
-        
+
         Attempts to update all registered software.  Updates are performed in the
         following order:
-        
+
         - `system` if enabled
         - All optional software configured in `moonraker.conf`.
         - Klipper
@@ -285,7 +283,7 @@ class AsyncUpdatesMixin:
 
         *Deprecated in API Version 1.5.0, superseded by the*
         *[Upgrade](#perform-an-upgrade) endpoint.*
-        
+
         Upgrades to the latest version of Moonraker and restarts
         the service. If an update is requested while a print is in progress then
         this request will return an error.
@@ -299,7 +297,7 @@ class AsyncUpdatesMixin:
 
         *Deprecated in API Version 1.5.0, superseded by the*
         *[Upgrade](#perform-an-upgrade) endpoint.*
-        
+
         Upgrades to the latest version of Klipper and restarts
         the service. If an update is requested while a print is in progress
         then this request will return an error.
@@ -313,7 +311,7 @@ class AsyncUpdatesMixin:
 
         *Deprecated in API Version 1.5.0, superseded by the*
         *[Upgrade](#perform-an-upgrade) endpoint.*
-        
+
         Update to the most recent release of the requested software.
         If an update is requested while a print is in progress then this
         request will return an error.
@@ -333,7 +331,7 @@ class AsyncUpdatesMixin:
 
         *Deprecated in API Version 1.5.0, superseded by the*
         *[Upgrade](#perform-an-upgrade) endpoint.*
-        
+
         Upgrades system packages.  If an update is requested while a print is
         in progress then this request will return an error.
 

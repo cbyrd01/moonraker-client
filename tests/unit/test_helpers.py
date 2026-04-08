@@ -2,16 +2,14 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
 from moonraker_client.helpers import (
-    PrintProgress,
-    PrinterStatus,
-    TemperatureReading,
     get_print_progress,
     get_printer_status,
+    get_system_health,
     get_temperatures,
     is_printing,
     list_gcode_files,
@@ -19,7 +17,6 @@ from moonraker_client.helpers import (
     set_bed_temp,
     set_hotend_temp,
     start_print,
-    get_system_health,
 )
 
 

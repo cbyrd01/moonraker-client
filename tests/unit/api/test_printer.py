@@ -7,7 +7,6 @@ from pytest_httpx import HTTPXMock
 
 from moonraker_client import AsyncMoonrakerClient, MoonrakerClient
 
-
 PRINTER_INFO_RESPONSE = {
     "result": {
         "state": "ready",

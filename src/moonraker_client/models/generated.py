@@ -715,4 +715,3 @@ class ResultOk:
         return cls(
             result=data.get("result"),
         )
-

@@ -63,9 +63,7 @@ class FilesMixin:
         """
         return self._request("GET", "/server/files/thumbnails", params={"filename": filename})  # type: ignore[attr-defined]
 
-    def files_directory(
-        self, path: str = "gcodes", extended: bool = False
-    ) -> dict[str, Any]:
+    def files_directory(self, path: str = "gcodes", extended: bool = False) -> dict[str, Any]:
         """Get directory information.
 
         Returns files and subdirectories at the given path (non-recursive).
@@ -260,7 +258,9 @@ class AsyncFilesMixin:
 
         JSON-RPC method: server.files.thumbnails
         """
-        return await self._request("GET", "/server/files/thumbnails", params={"filename": filename})  # type: ignore[attr-defined]
+        return await self._request(
+            "GET", "/server/files/thumbnails", params={"filename": filename}
+        )  # type: ignore[attr-defined]
 
     async def files_directory(
         self, path: str = "gcodes", extended: bool = False
@@ -311,7 +311,9 @@ class AsyncFilesMixin:
 
         JSON-RPC method: server.files.move
         """
-        return await self._request("POST", "/server/files/move", json={"source": source, "dest": dest})  # type: ignore[attr-defined]
+        return await self._request(
+            "POST", "/server/files/move", json={"source": source, "dest": dest}
+        )  # type: ignore[attr-defined]
 
     async def files_copy(self, source: str, dest: str) -> dict[str, Any]:
         """Copy a file or directory.
@@ -322,7 +324,9 @@ class AsyncFilesMixin:
 
         JSON-RPC method: server.files.copy
         """
-        return await self._request("POST", "/server/files/copy", json={"source": source, "dest": dest})  # type: ignore[attr-defined]
+        return await self._request(
+            "POST", "/server/files/copy", json={"source": source, "dest": dest}
+        )  # type: ignore[attr-defined]
 
     async def files_zip(
         self,

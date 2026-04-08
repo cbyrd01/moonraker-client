@@ -51,17 +51,17 @@ class ServerMixin:
             params["count"] = count
         return self._request("GET", "/server/gcode_store", params=params)
 
-    def server_logs_rollover(self, application: str = '*all*') -> Any:
+    def server_logs_rollover(self, application: str = "*all*") -> Any:
         """Rollover Logs
 
         Requests a manual rollover for log files registered with Moonraker's
         log management facility.  Currently these are limited to `moonraker.log`
         and `klippy.log`.
-        
+
         **Note:** Moonraker must be able to manage Klipper's systemd service to
         perform a manual rollover.  The rollover will fail under the following
         conditions:
-        
+
         - Moonraker cannot detect Klipper's systemd unit
         - Moonraker cannot detect the location of Klipper's files
         - A print is in progress
@@ -83,7 +83,15 @@ class ServerMixin:
         """
         return self._request("POST", "/server/restart")
 
-    def server_connection_identify(self, client_name: str, version: str, type: str, url: str, access_token: str | None = None, api_key: str | None = None) -> Any:
+    def server_connection_identify(
+        self,
+        client_name: str,
+        version: str,
+        type: str,
+        url: str,
+        access_token: str | None = None,
+        api_key: str | None = None,
+    ) -> Any:
         """Identify Connection
 
         This method provides a way for applications with persistent connections
@@ -92,15 +100,15 @@ class ServerMixin:
         type of frontend is connected.  Currently this method is only available
         to websocket and unix socket connections.  Once this endpoint returns
         success it cannot be called again, repeated calls will result in an error.
-        
+
         **Note:** When identifying as an `agent`, only one instance should be connected
         to Moonraker at a time.  If multiple agents of the same `client_name`
         attempt to identify themselves this endpoint will return an error.
         See the [extensions](./extensions.md) document for more information about
         `agents`.
-        
+
         **Note:** See the authorization API documentation for details on JWT and API Key authentication.
-        
+
         *Transport: JSON-RPC request (Websocket/Unix Socket Only)*
 
         Args:
@@ -131,20 +139,22 @@ class ServerMixin:
             This method is deprecated.  Please use the
             [identify endpoint](#identify-connection) to retrieve the
             Websocket's UID
-        
+
         *Transport: JSON-RPC request (Websocket/Unix Socket Only)*
 
         JSON-RPC method: server.websocket.id
         """
         return self._request("POST", "/server/websocket/id")
 
-    def server_jsonrpc(self, jsonrpc: str, method: str, id: int, params: dict[str, Any] | None = None) -> Any:
+    def server_jsonrpc(
+        self, jsonrpc: str, method: str, id: int, params: dict[str, Any] | None = None
+    ) -> Any:
         """JSON-RPC over HTTP
 
         Exposes the JSON-RPC interface over HTTP. Most JSON-RPC methods with corresponding HTTP APIs are available. Methods exclusive to other transports, such as Identify Connection, are not available.
 
         Args:
-            jsonrpc: 
+            jsonrpc:
             method: The JSON-RPC method name
             params: Method parameters (optional)
             id: Request identifier
@@ -201,17 +211,17 @@ class AsyncServerMixin:
             params["count"] = count
         return await self._request("GET", "/server/gcode_store", params=params)
 
-    async def server_logs_rollover(self, application: str = '*all*') -> Any:
+    async def server_logs_rollover(self, application: str = "*all*") -> Any:
         """Rollover Logs
 
         Requests a manual rollover for log files registered with Moonraker's
         log management facility.  Currently these are limited to `moonraker.log`
         and `klippy.log`.
-        
+
         **Note:** Moonraker must be able to manage Klipper's systemd service to
         perform a manual rollover.  The rollover will fail under the following
         conditions:
-        
+
         - Moonraker cannot detect Klipper's systemd unit
         - Moonraker cannot detect the location of Klipper's files
         - A print is in progress
@@ -233,7 +243,15 @@ class AsyncServerMixin:
         """
         return await self._request("POST", "/server/restart")
 
-    async def server_connection_identify(self, client_name: str, version: str, type: str, url: str, access_token: str | None = None, api_key: str | None = None) -> Any:
+    async def server_connection_identify(
+        self,
+        client_name: str,
+        version: str,
+        type: str,
+        url: str,
+        access_token: str | None = None,
+        api_key: str | None = None,
+    ) -> Any:
         """Identify Connection
 
         This method provides a way for applications with persistent connections
@@ -242,15 +260,15 @@ class AsyncServerMixin:
         type of frontend is connected.  Currently this method is only available
         to websocket and unix socket connections.  Once this endpoint returns
         success it cannot be called again, repeated calls will result in an error.
-        
+
         **Note:** When identifying as an `agent`, only one instance should be connected
         to Moonraker at a time.  If multiple agents of the same `client_name`
         attempt to identify themselves this endpoint will return an error.
         See the [extensions](./extensions.md) document for more information about
         `agents`.
-        
+
         **Note:** See the authorization API documentation for details on JWT and API Key authentication.
-        
+
         *Transport: JSON-RPC request (Websocket/Unix Socket Only)*
 
         Args:
@@ -281,20 +299,22 @@ class AsyncServerMixin:
             This method is deprecated.  Please use the
             [identify endpoint](#identify-connection) to retrieve the
             Websocket's UID
-        
+
         *Transport: JSON-RPC request (Websocket/Unix Socket Only)*
 
         JSON-RPC method: server.websocket.id
         """
         return await self._request("POST", "/server/websocket/id")
 
-    async def server_jsonrpc(self, jsonrpc: str, method: str, id: int, params: dict[str, Any] | None = None) -> Any:
+    async def server_jsonrpc(
+        self, jsonrpc: str, method: str, id: int, params: dict[str, Any] | None = None
+    ) -> Any:
         """JSON-RPC over HTTP
 
         Exposes the JSON-RPC interface over HTTP. Most JSON-RPC methods with corresponding HTTP APIs are available. Methods exclusive to other transports, such as Identify Connection, are not available.
 
         Args:
-            jsonrpc: 
+            jsonrpc:
             method: The JSON-RPC method name
             params: Method parameters (optional)
             id: Request identifier

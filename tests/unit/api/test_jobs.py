@@ -7,25 +7,33 @@ import json
 import pytest
 from pytest_httpx import HTTPXMock
 
-from moonraker_client import MoonrakerClient, AsyncMoonrakerClient
+from moonraker_client import AsyncMoonrakerClient, MoonrakerClient
 
 
 class TestJobsMixin:
     def test_jobqueue_status(self, httpx_mock: HTTPXMock) -> None:
-        httpx_mock.add_response(json={"result": {
-            "queued_jobs": [],
-            "queue_state": "ready",
-        }})
+        httpx_mock.add_response(
+            json={
+                "result": {
+                    "queued_jobs": [],
+                    "queue_state": "ready",
+                }
+            }
+        )
         with MoonrakerClient("http://localhost:7125") as client:
             result = client.server_jobqueue_status()
         assert result["queue_state"] == "ready"
         assert result["queued_jobs"] == []
 
     def test_jobqueue_enqueue(self, httpx_mock: HTTPXMock) -> None:
-        httpx_mock.add_response(json={"result": {
-            "queued_jobs": [{"filename": "test.gcode", "job_id": "001"}],
-            "queue_state": "ready",
-        }})
+        httpx_mock.add_response(
+            json={
+                "result": {
+                    "queued_jobs": [{"filename": "test.gcode", "job_id": "001"}],
+                    "queue_state": "ready",
+                }
+            }
+        )
         with MoonrakerClient("http://localhost:7125") as client:
             result = client.server_jobqueue_job(filenames=["test.gcode"])
         assert len(result["queued_jobs"]) == 1
@@ -51,7 +59,7 @@ class TestJobsMixin:
     def test_jobqueue_jump(self, httpx_mock: HTTPXMock) -> None:
         httpx_mock.add_response(json={"result": "ok"})
         with MoonrakerClient("http://localhost:7125") as client:
-            result = client.server_jobqueue_jump(job_id="001")
+            client.server_jobqueue_jump(job_id="001")
         request = httpx_mock.get_request()
         assert request is not None
         body = json.loads(request.content)

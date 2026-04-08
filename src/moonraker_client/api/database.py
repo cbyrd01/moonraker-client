@@ -51,16 +51,16 @@ class DatabaseMixin:
         """
         return self._request("POST", "/server/database/compact")
 
-    def server_database_backup(self, filename: str = 'sqldb-backup-{timespec}.db') -> Any:
+    def server_database_backup(self, filename: str = "sqldb-backup-{timespec}.db") -> Any:
         """Backup Database
 
         Creates a backup of the current database.  The backup will be
         created in the `<data_path>/backup/database/<filename>`.
-        
+
         This API cannot be requested when Klipper is printing.
-        
+
         **Note:** The `{timespec}` of the default `filename` is in the following format:
-        
+
         `<year><month><day>-<hour><minute><second>`
 
         Args:
@@ -80,9 +80,9 @@ class DatabaseMixin:
         must be located at `<data_path>/backup/database/<filename>`. The
         `<filename>` must be a valid filename reported in by the
         [database list](#list-database-info) API.
-        
+
         This API cannot be requested when Klipper is printing.
-        
+
         **Note:** Moonraker will restart immediately after this request is processed.
 
         Args:
@@ -110,7 +110,7 @@ class DatabaseMixin:
 
         Debug version of the [Add Database Item](#add-database-item) endpoint.
         Keys within protected and forbidden namespaces may be inserted.
-        
+
         **Note:** Modifying protected namespaces outside of Moonraker can result in
         broken functionality and is not supported for production environments.
         Issues opened with reports/queries related to this endpoint will be
@@ -178,16 +178,16 @@ class AsyncDatabaseMixin:
         """
         return await self._request("POST", "/server/database/compact")
 
-    async def server_database_backup(self, filename: str = 'sqldb-backup-{timespec}.db') -> Any:
+    async def server_database_backup(self, filename: str = "sqldb-backup-{timespec}.db") -> Any:
         """Backup Database
 
         Creates a backup of the current database.  The backup will be
         created in the `<data_path>/backup/database/<filename>`.
-        
+
         This API cannot be requested when Klipper is printing.
-        
+
         **Note:** The `{timespec}` of the default `filename` is in the following format:
-        
+
         `<year><month><day>-<hour><minute><second>`
 
         Args:
@@ -207,9 +207,9 @@ class AsyncDatabaseMixin:
         must be located at `<data_path>/backup/database/<filename>`. The
         `<filename>` must be a valid filename reported in by the
         [database list](#list-database-info) API.
-        
+
         This API cannot be requested when Klipper is printing.
-        
+
         **Note:** Moonraker will restart immediately after this request is processed.
 
         Args:
@@ -237,7 +237,7 @@ class AsyncDatabaseMixin:
 
         Debug version of the [Add Database Item](#add-database-item) endpoint.
         Keys within protected and forbidden namespaces may be inserted.
-        
+
         **Note:** Modifying protected namespaces outside of Moonraker can result in
         broken functionality and is not supported for production environments.
         Issues opened with reports/queries related to this endpoint will be

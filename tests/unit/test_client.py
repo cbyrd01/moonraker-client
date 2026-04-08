@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import httpx
 import pytest
 from pytest_httpx import HTTPXMock
 
@@ -100,9 +99,7 @@ class TestMoonrakerClient:
     def test_request_passes_json_body(self, httpx_mock: HTTPXMock) -> None:
         httpx_mock.add_response(json={"result": "ok"})
         with MoonrakerClient("http://localhost:7125") as client:
-            client._request(
-                "POST", "/printer/gcode/script", json={"script": "G28"}
-            )
+            client._request("POST", "/printer/gcode/script", json={"script": "G28"})
         request = httpx_mock.get_request()
         assert request is not None
         import json

@@ -11,7 +11,14 @@ from typing import Any
 class HistoryMixin:
     """Synchronous history API methods."""
 
-    def server_history_list(self, limit: int = 50, start: int = 0, before: float | None = None, since: float | None = None, order: str = 'desc') -> Any:
+    def server_history_list(
+        self,
+        limit: int = 50,
+        start: int = 0,
+        before: float | None = None,
+        since: float | None = None,
+        order: str = "desc",
+    ) -> Any:
         """Get job list
 
         Args:
@@ -68,7 +75,14 @@ class HistoryMixin:
 class AsyncHistoryMixin:
     """Asynchronous history API methods."""
 
-    async def server_history_list(self, limit: int = 50, start: int = 0, before: float | None = None, since: float | None = None, order: str = 'desc') -> Any:
+    async def server_history_list(
+        self,
+        limit: int = 50,
+        start: int = 0,
+        before: float | None = None,
+        since: float | None = None,
+        order: str = "desc",
+    ) -> Any:
         """Get job list
 
         Args:

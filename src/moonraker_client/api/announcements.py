@@ -43,7 +43,7 @@ class AnnouncementsMixin:
         """Dismiss an announcement
 
         Sets the dismiss flag of an announcement to `true`.
-        
+
         **Note:** The `entry_id` typically contains forward slashes. Remember to escape this value
         if including it in the query string of an HTTP request.
 
@@ -112,11 +112,13 @@ class AsyncAnnouncementsMixin:
         """
         return await self._request("POST", "/server/announcements/update")
 
-    async def server_announcements_dismiss(self, entry_id: str, wake_time: float | None = None) -> Any:
+    async def server_announcements_dismiss(
+        self, entry_id: str, wake_time: float | None = None
+    ) -> Any:
         """Dismiss an announcement
 
         Sets the dismiss flag of an announcement to `true`.
-        
+
         **Note:** The `entry_id` typically contains forward slashes. Remember to escape this value
         if including it in the query string of an HTTP request.
 

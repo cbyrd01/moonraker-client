@@ -8,6 +8,8 @@ Supports three auth schemes:
 
 from __future__ import annotations
 
+from collections.abc import Generator
+
 import httpx
 
 
@@ -17,7 +19,7 @@ class ApiKeyAuth(httpx.Auth):
     def __init__(self, api_key: str) -> None:
         self.api_key = api_key
 
-    def auth_flow(self, request: httpx.Request) -> httpx.Request:  # type: ignore[override]
+    def auth_flow(self, request: httpx.Request) -> Generator[httpx.Request, httpx.Response, None]:  # type: ignore[override]
         request.headers["X-Api-Key"] = self.api_key
         yield request
 
@@ -28,7 +30,7 @@ class BearerAuth(httpx.Auth):
     def __init__(self, token: str) -> None:
         self.token = token
 
-    def auth_flow(self, request: httpx.Request) -> httpx.Request:  # type: ignore[override]
+    def auth_flow(self, request: httpx.Request) -> Generator[httpx.Request, httpx.Response, None]:  # type: ignore[override]
         request.headers["Authorization"] = f"Bearer {self.token}"
         yield request
 

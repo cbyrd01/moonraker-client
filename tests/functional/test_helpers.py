@@ -14,7 +14,6 @@ from moonraker_client.helpers import (
     list_gcode_files,
 )
 
-
 pytestmark = pytest.mark.functional
 
 

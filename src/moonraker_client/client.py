@@ -14,7 +14,7 @@ import httpx
 
 from moonraker_client._base import handle_request_error, unwrap_response
 from moonraker_client._transport import AsyncHttpTransport, HttpTransport, WebSocketTransport
-from moonraker_client.api.announcements import AsyncAnnouncementsMixin, AnnouncementsMixin
+from moonraker_client.api.announcements import AnnouncementsMixin, AsyncAnnouncementsMixin
 from moonraker_client.api.auth import AsyncAuthMixin, AuthMixin
 from moonraker_client.api.database import AsyncDatabaseMixin, DatabaseMixin
 from moonraker_client.api.devices import AsyncDevicesMixin, DevicesMixin
@@ -200,9 +200,7 @@ class AsyncMoonrakerClient(
         """Whether the WebSocket is currently connected."""
         return self._ws is not None and self._ws.is_connected
 
-    async def send_jsonrpc(
-        self, method: str, params: dict[str, Any] | None = None
-    ) -> Any:
+    async def send_jsonrpc(self, method: str, params: dict[str, Any] | None = None) -> Any:
         """Send a JSON-RPC request over the WebSocket.
 
         Args:
@@ -236,16 +234,17 @@ class AsyncMoonrakerClient(
         Returns:
             Connection info from Moonraker.
         """
-        return await self.send_jsonrpc("server.connection.identify", {
-            "client_name": client_name,
-            "version": version,
-            "type": client_type,
-            "url": url,
-        })
+        return await self.send_jsonrpc(
+            "server.connection.identify",
+            {
+                "client_name": client_name,
+                "version": version,
+                "type": client_type,
+                "url": url,
+            },
+        )
 
-    async def subscribe_objects(
-        self, objects: dict[str, list[str] | None]
-    ) -> dict[str, Any]:
+    async def subscribe_objects(self, objects: dict[str, list[str] | None]) -> dict[str, Any]:
         """Subscribe to printer object status updates over WebSocket.
 
         Args:
@@ -255,9 +254,12 @@ class AsyncMoonrakerClient(
         Returns:
             Initial status snapshot for the subscribed objects.
         """
-        return await self.send_jsonrpc("printer.objects.subscribe", {
-            "objects": objects,
-        })
+        return await self.send_jsonrpc(
+            "printer.objects.subscribe",
+            {
+                "objects": objects,
+            },
+        )
 
     def on(self, event: str, handler: Callable[..., Any]) -> None:
         """Register a handler for WebSocket notification events.

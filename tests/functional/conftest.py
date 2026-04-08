@@ -9,7 +9,6 @@ import pytest
 
 from moonraker_client import MoonrakerClient
 
-
 MOONRAKER_URL = os.environ.get("MOONRAKER_URL", "")
 MOONRAKER_API_KEY = os.environ.get("MOONRAKER_API_KEY")
 

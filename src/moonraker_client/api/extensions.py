@@ -21,7 +21,9 @@ class ExtensionsMixin:
         """
         return self._request("GET", "/server/extensions/list")
 
-    def server_extensions_request(self, agent: str, method: str, arguments: str | None = None) -> Any:
+    def server_extensions_request(
+        self, agent: str, method: str, arguments: str | None = None
+    ) -> Any:
         """Call an extension method
 
         This endpoint may be used to call a method on a connected agent.
@@ -50,10 +52,10 @@ class ExtensionsMixin:
         Sends a [JSON-RPC notification](./jsonrpc_notifications.md#agent-events)
         containing the supplied event info to all of Moonraker's persistent
         connections.
-        
+
         **Note:** The `connected` and `disconnected` events are reserved for use
         by Moonraker and may not be sent from agents.
-        
+
         **Note:** An agent may send an event without specifying the JSON-RPC `id` field.
         In this case Moonraker will not return a response.
 
@@ -74,11 +76,11 @@ class ExtensionsMixin:
 
         Registers a "remote method" with Klipper that can be called
         from GCode Macros.
-        
+
         **Note:** Methods registered by agents will persist until the agent disconnects.
         Upon connection it is only necessary that they register their desired
         methods once.
-        
+
         **Note:** Remote methods called from Klipper never contain the JSON-RPC "id" field,
         as Klipper does not accept return values to remote methods.
 
@@ -105,7 +107,9 @@ class AsyncExtensionsMixin:
         """
         return await self._request("GET", "/server/extensions/list")
 
-    async def server_extensions_request(self, agent: str, method: str, arguments: str | None = None) -> Any:
+    async def server_extensions_request(
+        self, agent: str, method: str, arguments: str | None = None
+    ) -> Any:
         """Call an extension method
 
         This endpoint may be used to call a method on a connected agent.
@@ -134,10 +138,10 @@ class AsyncExtensionsMixin:
         Sends a [JSON-RPC notification](./jsonrpc_notifications.md#agent-events)
         containing the supplied event info to all of Moonraker's persistent
         connections.
-        
+
         **Note:** The `connected` and `disconnected` events are reserved for use
         by Moonraker and may not be sent from agents.
-        
+
         **Note:** An agent may send an event without specifying the JSON-RPC `id` field.
         In this case Moonraker will not return a response.
 
@@ -158,11 +162,11 @@ class AsyncExtensionsMixin:
 
         Registers a "remote method" with Klipper that can be called
         from GCode Macros.
-        
+
         **Note:** Methods registered by agents will persist until the agent disconnects.
         Upon connection it is only necessary that they register their desired
         methods once.
-        
+
         **Note:** Remote methods called from Klipper never contain the JSON-RPC "id" field,
         as Klipper does not accept return values to remote methods.
 

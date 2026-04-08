@@ -6,7 +6,6 @@ import os
 
 import pytest
 
-
 MOONRAKER_URL = os.environ.get("MOONRAKER_URL", "")
 
 
@@ -15,9 +14,7 @@ def pytest_configure(config: pytest.Config) -> None:
     config.addinivalue_line("markers", "functional: tests requiring a live Moonraker server")
 
 
-def pytest_collection_modifyitems(
-    config: pytest.Config, items: list[pytest.Item]
-) -> None:
+def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
     """Auto-skip functional tests unless MOONRAKER_URL is set or --functional is passed."""
     run_functional = config.getoption("--functional", default=False)
     if run_functional and MOONRAKER_URL:

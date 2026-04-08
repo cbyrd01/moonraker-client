@@ -18,7 +18,7 @@ class WebcamsMixin:
         """
         return self._request("GET", "/server/webcams/list")
 
-    def server_webcams_item(self, uid: str, name: str = '**DEPRECATED**') -> Any:
+    def server_webcams_item(self, uid: str, name: str = "**DEPRECATED**") -> Any:
         """Get Webcam Information
 
         Args:
@@ -33,7 +33,7 @@ class WebcamsMixin:
             params["name"] = name
         return self._request("GET", "/server/webcams/item", params=params)
 
-    def server_webcams_test(self, uid: str, name: str = '**DEPRECATED**') -> Any:
+    def server_webcams_test(self, uid: str, name: str = "**DEPRECATED**") -> Any:
         """Test a webcam
 
         Resolves a webcam's stream and snapshot urls.  If the snapshot
@@ -63,7 +63,7 @@ class AsyncWebcamsMixin:
         """
         return await self._request("GET", "/server/webcams/list")
 
-    async def server_webcams_item(self, uid: str, name: str = '**DEPRECATED**') -> Any:
+    async def server_webcams_item(self, uid: str, name: str = "**DEPRECATED**") -> Any:
         """Get Webcam Information
 
         Args:
@@ -78,7 +78,7 @@ class AsyncWebcamsMixin:
             params["name"] = name
         return await self._request("GET", "/server/webcams/item", params=params)
 
-    async def server_webcams_test(self, uid: str, name: str = '**DEPRECATED**') -> Any:
+    async def server_webcams_test(self, uid: str, name: str = "**DEPRECATED**") -> Any:
         """Test a webcam
 
         Resolves a webcam's stream and snapshot urls.  If the snapshot

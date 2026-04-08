@@ -6,7 +6,6 @@ import pytest
 
 from moonraker_client import MoonrakerClient
 
-
 pytestmark = pytest.mark.functional
 
 

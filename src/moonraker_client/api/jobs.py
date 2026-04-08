@@ -27,18 +27,18 @@ class JobsMixin:
         filename may be specified multiple times to queue a job that repeats.
         When multiple jobs are specified they will be enqueued in the order they
         are received.
-        
+
         **Note:** The request will be aborted and return an error if any of the supplied
         files do not exist.
-        
+
         **Note:** If it isn't possible for your client to pass parameters in the body
         of the request as a json object, they can be added to the query string
         as shown below:
-        
+
         ```{.http .apirequest title="HTTP Request"}
         POST /server/job_queue/job?filenames=job1.gcode,job2.gcode,subdir/job3.gcode
         ```
-        
+
         Multiple jobs should be comma separated as shown above.
 
         Args:
@@ -111,18 +111,18 @@ class AsyncJobsMixin:
         filename may be specified multiple times to queue a job that repeats.
         When multiple jobs are specified they will be enqueued in the order they
         are received.
-        
+
         **Note:** The request will be aborted and return an error if any of the supplied
         files do not exist.
-        
+
         **Note:** If it isn't possible for your client to pass parameters in the body
         of the request as a json object, they can be added to the query string
         as shown below:
-        
+
         ```{.http .apirequest title="HTTP Request"}
         POST /server/job_queue/job?filenames=job1.gcode,job2.gcode,subdir/job3.gcode
         ```
-        
+
         Multiple jobs should be comma separated as shown above.
 
         Args:

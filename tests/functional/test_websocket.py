@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import asyncio
 import os
+from typing import Any
 
 import pytest
 
 from moonraker_client import AsyncMoonrakerClient
 from moonraker_client.api.notifications import NOTIFY_STATUS_UPDATE
-
 
 MOONRAKER_URL = os.environ.get("MOONRAKER_URL", "")
 
@@ -69,10 +69,12 @@ class TestObjectSubscription:
     @pytest.mark.asyncio
     async def test_subscribe_objects(self, async_client: AsyncMoonrakerClient) -> None:
         await async_client.connect_websocket(reconnect=False)
-        result = await async_client.subscribe_objects({
-            "toolhead": ["position", "status"],
-            "extruder": None,
-        })
+        result = await async_client.subscribe_objects(
+            {
+                "toolhead": ["position", "status"],
+                "extruder": None,
+            }
+        )
         assert "eventtime" in result
         assert "status" in result
 

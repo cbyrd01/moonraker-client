@@ -233,9 +233,7 @@ class WebSocketTransport:
         self._id_gen.reset()
         logger.info("WebSocket disconnected")
 
-    async def send_jsonrpc(
-        self, method: str, params: dict[str, Any] | None = None
-    ) -> Any:
+    async def send_jsonrpc(self, method: str, params: dict[str, Any] | None = None) -> Any:
         """Send a JSON-RPC request and wait for the response.
 
         Args:
@@ -302,16 +300,12 @@ class WebSocketTransport:
                                 if asyncio.iscoroutine(result):
                                     await result
                             except Exception:
-                                logger.exception(
-                                    "Error in notification handler for %s", method
-                                )
+                                logger.exception("Error in notification handler for %s", method)
             except websockets.ConnectionClosed:
                 self._connected.clear()
                 if self._closing or not self._reconnect:
                     break
-                logger.info(
-                    "WebSocket disconnected, reconnecting in %.1fs...", reconnect_delay
-                )
+                logger.info("WebSocket disconnected, reconnecting in %.1fs...", reconnect_delay)
                 await asyncio.sleep(reconnect_delay)
                 reconnect_delay = min(reconnect_delay * 2, self._max_reconnect_delay)
                 try:

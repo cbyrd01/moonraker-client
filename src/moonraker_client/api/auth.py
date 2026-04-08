@@ -11,7 +11,9 @@ from typing import Any
 class AuthMixin:
     """Synchronous auth API methods."""
 
-    def access_login(self, username: str, password: str, source: str = 'Set by configuration') -> Any:
+    def access_login(
+        self, username: str, password: str, source: str = "Set by configuration"
+    ) -> Any:
         """Login User
 
         Args:
@@ -69,7 +71,7 @@ class AuthMixin:
         This endpoint can be used to refresh an expired access token.  If this
         request returns an error then the refresh token is no longer valid and
         the user must login with their credentials.
-        
+
         **Note:** This endpoint may be accessed by unauthorized clients.  A 401 will
         only be returned if the refresh token is invalid.
 
@@ -114,7 +116,9 @@ class AuthMixin:
 class AsyncAuthMixin:
     """Asynchronous auth API methods."""
 
-    async def access_login(self, username: str, password: str, source: str = 'Set by configuration') -> Any:
+    async def access_login(
+        self, username: str, password: str, source: str = "Set by configuration"
+    ) -> Any:
         """Login User
 
         Args:
@@ -172,7 +176,7 @@ class AsyncAuthMixin:
         This endpoint can be used to refresh an expired access token.  If this
         request returns an error then the refresh token is no longer valid and
         the user must login with their credentials.
-        
+
         **Note:** This endpoint may be accessed by unauthorized clients.  A 401 will
         only be returned if the refresh token is invalid.
 

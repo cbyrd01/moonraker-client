@@ -7,24 +7,34 @@ import json
 import pytest
 from pytest_httpx import HTTPXMock
 
-from moonraker_client import MoonrakerClient, AsyncMoonrakerClient
+from moonraker_client import AsyncMoonrakerClient, MoonrakerClient
 
 
 class TestMachineMixin:
     def test_system_info(self, httpx_mock: HTTPXMock) -> None:
-        httpx_mock.add_response(json={"result": {"system_info": {
-            "cpu_info": {"cpu_count": 4},
-        }}})
+        httpx_mock.add_response(
+            json={
+                "result": {
+                    "system_info": {
+                        "cpu_info": {"cpu_count": 4},
+                    }
+                }
+            }
+        )
         with MoonrakerClient("http://localhost:7125") as client:
             result = client.machine_systeminfo()
         assert "system_info" in result
 
     def test_proc_stats(self, httpx_mock: HTTPXMock) -> None:
-        httpx_mock.add_response(json={"result": {
-            "moonraker_stats": [],
-            "cpu_temp": 45.0,
-            "system_uptime": 86400.0,
-        }})
+        httpx_mock.add_response(
+            json={
+                "result": {
+                    "moonraker_stats": [],
+                    "cpu_temp": 45.0,
+                    "system_uptime": 86400.0,
+                }
+            }
+        )
         with MoonrakerClient("http://localhost:7125") as client:
             result = client.machine_procstats()
         assert result["cpu_temp"] == 45.0
@@ -33,7 +43,7 @@ class TestMachineMixin:
     def test_services_restart(self, httpx_mock: HTTPXMock) -> None:
         httpx_mock.add_response(json={"result": "ok"})
         with MoonrakerClient("http://localhost:7125") as client:
-            result = client.machine_services_restart(service="klipper")
+            client.machine_services_restart(service="klipper")
         request = httpx_mock.get_request()
         assert request is not None
         body = json.loads(request.content)

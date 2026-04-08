@@ -10,12 +10,16 @@ from moonraker_client import AsyncMoonrakerClient, MoonrakerClient
 
 class TestServerMixin:
     def test_server_info(self, httpx_mock: HTTPXMock) -> None:
-        httpx_mock.add_response(json={"result": {
-            "klippy_connected": True,
-            "klippy_state": "ready",
-            "components": ["server", "file_manager"],
-            "moonraker_version": "v0.9.0",
-        }})
+        httpx_mock.add_response(
+            json={
+                "result": {
+                    "klippy_connected": True,
+                    "klippy_state": "ready",
+                    "components": ["server", "file_manager"],
+                    "moonraker_version": "v0.9.0",
+                }
+            }
+        )
         with MoonrakerClient("http://localhost:7125") as client:
             result = client.server_info()
         assert result["klippy_state"] == "ready"
@@ -39,7 +43,7 @@ class TestServerMixin:
     def test_server_gcode_store(self, httpx_mock: HTTPXMock) -> None:
         httpx_mock.add_response(json={"result": {"gcode_store": []}})
         with MoonrakerClient("http://localhost:7125") as client:
-            result = client.server_gcodestore(count=10)
+            client.server_gcodestore(count=10)
         request = httpx_mock.get_request()
         assert request is not None
         assert request.url.params["count"] == "10"
