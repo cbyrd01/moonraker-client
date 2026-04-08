@@ -6,6 +6,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from moonraker_client.exceptions import MoonrakerConnectionError
 from moonraker_client.helpers import (
     get_print_progress,
     get_printer_status,
@@ -40,7 +41,7 @@ class TestGetTemperatures:
         assert temps["heater_bed"].power == 0.1
 
     def test_returns_empty_on_error(self, mock_client: MagicMock) -> None:
-        mock_client.printer_objects_query.side_effect = Exception("connection failed")
+        mock_client.printer_objects_query.side_effect = MoonrakerConnectionError("connection failed")
         temps = get_temperatures(mock_client)
         assert temps == {}
 
@@ -59,7 +60,7 @@ class TestIsPrinting:
         assert is_printing(mock_client) is False
 
     def test_false_on_error(self, mock_client: MagicMock) -> None:
-        mock_client.printer_objects_query.side_effect = Exception("fail")
+        mock_client.printer_objects_query.side_effect = MoonrakerConnectionError("fail")
         assert is_printing(mock_client) is False
 
 
@@ -128,7 +129,7 @@ class TestStartPrint:
         mock_client.print_start.assert_called_once_with("test.gcode")
 
     def test_raises_when_file_not_found(self, mock_client: MagicMock) -> None:
-        mock_client.files_metadata.side_effect = Exception("not found")
+        mock_client.files_metadata.side_effect = MoonrakerConnectionError("not found")
         with pytest.raises(FileNotFoundError, match="test.gcode"):
             start_print(mock_client, "test.gcode")
 

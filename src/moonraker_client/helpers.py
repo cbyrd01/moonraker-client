@@ -11,6 +11,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, BinaryIO
 
+from moonraker_client.exceptions import MoonrakerError
+
 if TYPE_CHECKING:
     from moonraker_client.client import MoonrakerClient
 
@@ -84,7 +86,7 @@ def get_printer_status(client: MoonrakerClient) -> PrinterStatus:
         filename = print_stats.get("filename") or None
         progress = vsd.get("progress", 0.0)
         print_duration = print_stats.get("print_duration", 0.0)
-    except Exception:
+    except MoonrakerError:
         pass
 
     return PrinterStatus(
@@ -118,7 +120,7 @@ def get_temperatures(client: MoonrakerClient) -> dict[str, TemperatureReading]:
                 "heater_bed": ["temperature", "target", "power"],
             }
         )
-    except Exception:
+    except MoonrakerError:
         return {}
 
     status = result.get("status", {})
@@ -146,7 +148,7 @@ def is_printing(client: MoonrakerClient) -> bool:
         result = client.printer_objects_query({"print_stats": ["state"]})
         state = result.get("status", {}).get("print_stats", {}).get("state", "")
         return state == "printing"
-    except Exception:
+    except MoonrakerError:
         return False
 
 
@@ -166,7 +168,7 @@ def get_print_progress(client: MoonrakerClient) -> PrintProgress | None:
                 "virtual_sdcard": None,
             }
         )
-    except Exception:
+    except MoonrakerError:
         return None
 
     status = result.get("status", {})
@@ -201,7 +203,7 @@ def start_print(client: MoonrakerClient, filename: str) -> str:
     """
     try:
         client.files_metadata(filename)
-    except Exception:
+    except MoonrakerError:
         raise FileNotFoundError(f"File not found on printer: {filename}")
     return client.print_start(filename)
 
@@ -381,6 +383,7 @@ def restart_firmware(
             info = client.printer_info()
             if info.get("state") == "ready":
                 return True
-        except Exception:
+        except MoonrakerError:
+            # Server may be temporarily unreachable during firmware restart
             continue
     return False
