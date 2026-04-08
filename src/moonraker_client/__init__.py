@@ -21,9 +21,9 @@ from moonraker_client import helpers
 __all__ = [
     "AsyncMoonrakerClient",
     "JsonRpcError",
-    "MoonrakerClient",
     "MoonrakerAPIError",
     "MoonrakerAuthError",
+    "MoonrakerClient",
     "MoonrakerConnectionError",
     "MoonrakerError",
     "MoonrakerTimeoutError",

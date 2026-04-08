@@ -132,7 +132,7 @@ class TestStartPrint:
 
     def test_raises_when_file_not_found(self, mock_client: MagicMock) -> None:
         mock_client.files_metadata.side_effect = MoonrakerConnectionError("not found")
-        with pytest.raises(FileNotFoundError, match="test.gcode"):
+        with pytest.raises(FileNotFoundError, match=r"test\.gcode"):
             start_print(mock_client, "test.gcode")
 
 

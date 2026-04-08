@@ -76,9 +76,8 @@ class TestMoonrakerClient:
             status_code=403,
             json={"error": {"code": 403, "message": "Forbidden"}},
         )
-        with MoonrakerClient("http://localhost:7125") as client:
-            with pytest.raises(MoonrakerAuthError):
-                client._request("GET", "/printer/info")
+        with MoonrakerClient("http://localhost:7125") as client, pytest.raises(MoonrakerAuthError):
+            client._request("GET", "/printer/info")
 
     def test_request_handles_error_without_json_body(self, httpx_mock: HTTPXMock) -> None:
         httpx_mock.add_response(status_code=500, text="Internal Server Error")

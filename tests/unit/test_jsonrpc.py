@@ -150,10 +150,10 @@ class TestExtractNotification:
 
     def test_dict_params_wrapped_in_list(self) -> None:
         msg = {"jsonrpc": "2.0", "method": "notify_test", "params": {"key": "value"}}
-        method, params = extract_notification(msg)
+        _method, params = extract_notification(msg)
         assert params == [{"key": "value"}]
 
     def test_no_params(self) -> None:
         msg = {"jsonrpc": "2.0", "method": "notify_klippy_ready"}
-        method, params = extract_notification(msg)
+        _method, params = extract_notification(msg)
         assert params == []

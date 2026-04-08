@@ -203,8 +203,8 @@ def start_print(client: MoonrakerClient, filename: str) -> str:
     """
     try:
         client.files_metadata(filename)
-    except MoonrakerError:
-        raise FileNotFoundError(f"File not found on printer: {filename}")
+    except MoonrakerError as err:
+        raise FileNotFoundError(f"File not found on printer: {filename}") from err
     return client.print_start(filename)
 
 

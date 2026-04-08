@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 from collections.abc import Callable
 from typing import Any
@@ -217,10 +218,8 @@ class WebSocketTransport:
         self._connected.clear()
         if self._listener_task is not None:
             self._listener_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._listener_task
-            except asyncio.CancelledError:
-                pass
             self._listener_task = None
         if self._connection is not None:
             await self._connection.close()
@@ -260,9 +259,9 @@ class WebSocketTransport:
         try:
             await self._connection.send(request.to_json())
             return await asyncio.wait_for(future, timeout=30.0)
-        except asyncio.TimeoutError:
+        except asyncio.TimeoutError as exc:
             self._pending.pop(request_id, None)
-            raise TimeoutError(f"JSON-RPC request {method} (id={request_id}) timed out")
+            raise TimeoutError(f"JSON-RPC request {method} (id={request_id}) timed out") from exc
         except Exception:
             self._pending.pop(request_id, None)
             raise

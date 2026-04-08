@@ -43,7 +43,7 @@ python tools/generate.py /path/to/openapi.yaml
 - `src/moonraker_client/_jsonrpc.py` - JSON-RPC 2.0 protocol handling
 - `src/moonraker_client/auth.py` - API key + Bearer JWT auth via httpx auth hooks
 - `src/moonraker_client/exceptions.py` - Exception hierarchy (MoonrakerError -> APIError, AuthError, etc.)
-- `src/moonraker_client/helpers.py` - High-level convenience functions (get_temperatures, start_print, etc.)
+- `src/moonraker_client/helpers.py` - High-level convenience functions (sync + async variants: get_temperatures, start_print, etc.)
 - `src/moonraker_client/models/` - Dataclass models generated from OpenAPI schemas
 - `src/moonraker_client/api/` - Endpoint mixin classes (one per API category, 12 total)
 
@@ -53,6 +53,8 @@ python tools/generate.py /path/to/openapi.yaml
 - **Response unwrapping**: Moonraker wraps all responses in `{"result": ...}`. The `_base.py:unwrap_response()` handles this automatically.
 - **Generated code**: `tools/generate.py` parses the OpenAPI YAML spec and produces `api/*.py` and `models/generated.py`. Output is committed and hand-tuned.
 - **WebSocket is optional**: HTTP works standalone. WebSocket requires explicit `connect_websocket()` and is async-only.
+- **Error handling**: Helpers catch `MoonrakerError` (not bare `Exception`) for expected failure modes. `JsonRpcError` is exported from the public API for WebSocket error handling.
+- **Async helpers**: Key helpers have async variants prefixed with `async_` (e.g., `async_get_printer_status`, `async_get_temperatures`).
 
 ### Dependencies
 
