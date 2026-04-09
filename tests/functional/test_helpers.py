@@ -12,6 +12,8 @@ from moonraker_client.helpers import (
     get_temperatures,
     is_printing,
     list_gcode_files,
+    set_bed_temp,
+    set_hotend_temp,
 )
 
 pytestmark = pytest.mark.functional
@@ -66,3 +68,37 @@ class TestGetSystemHealth:
         health = get_system_health(client)
         assert "cpu_temp" in health or "system_uptime" in health
         assert "cpu_info" in health
+
+
+class TestSetTemperature:
+    """Tests that verify temperature setting actually changes the target.
+
+    Uses safe low temperatures and always cleans up to 0.
+    """
+
+    def test_set_hotend_temp(self, client: MoonrakerClient) -> None:
+        try:
+            set_hotend_temp(client, 50.0)
+            temps = get_temperatures(client)
+            assert "extruder" in temps
+            assert temps["extruder"].target == pytest.approx(50.0, abs=0.1)
+        finally:
+            set_hotend_temp(client, 0)
+
+    def test_set_bed_temp(self, client: MoonrakerClient) -> None:
+        try:
+            set_bed_temp(client, 40.0)
+            temps = get_temperatures(client)
+            assert "heater_bed" in temps
+            assert temps["heater_bed"].target == pytest.approx(40.0, abs=0.1)
+        finally:
+            set_bed_temp(client, 0)
+
+    def test_cooldown(self, client: MoonrakerClient) -> None:
+        set_hotend_temp(client, 0)
+        set_bed_temp(client, 0)
+        temps = get_temperatures(client)
+        if "extruder" in temps:
+            assert temps["extruder"].target == pytest.approx(0.0, abs=0.1)
+        if "heater_bed" in temps:
+            assert temps["heater_bed"].target == pytest.approx(0.0, abs=0.1)

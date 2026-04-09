@@ -33,6 +33,9 @@ store = client.server_temperaturestore()
 
 ## Setting Temperatures
 
+These helpers use Klipper's native `SET_HEATER_TEMPERATURE` command, which
+is more reliable than G-code `M104`/`M140` for Klipper-based printers.
+
 ```python
 from moonraker_client.helpers import set_hotend_temp, set_bed_temp
 
@@ -40,6 +43,9 @@ set_hotend_temp(client, 210.0)       # PLA
 set_hotend_temp(client, 250.0)       # PETG
 set_bed_temp(client, 60.0)           # PLA
 set_bed_temp(client, 80.0)           # PETG
+
+# Multi-extruder: specify tool index
+set_hotend_temp(client, 210.0, tool=1)  # Second extruder
 
 # Cool down
 set_hotend_temp(client, 0)

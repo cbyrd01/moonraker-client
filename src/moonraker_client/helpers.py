@@ -251,7 +251,8 @@ def set_hotend_temp(client: MoonrakerClient, target: float, tool: int = 0) -> st
     Returns:
         "ok" on success.
     """
-    return client.gcode_script(f"M104 S{target} T{tool}")
+    heater = f"extruder{'' if tool == 0 else tool}"
+    return client.gcode_script(f"SET_HEATER_TEMPERATURE HEATER={heater} TARGET={target}")
 
 
 def set_bed_temp(client: MoonrakerClient, target: float) -> str:
@@ -264,7 +265,7 @@ def set_bed_temp(client: MoonrakerClient, target: float) -> str:
     Returns:
         "ok" on success.
     """
-    return client.gcode_script(f"M140 S{target}")
+    return client.gcode_script(f"SET_HEATER_TEMPERATURE HEATER=heater_bed TARGET={target}")
 
 
 def wait_for_temps(

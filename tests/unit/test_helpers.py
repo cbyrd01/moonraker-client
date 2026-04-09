@@ -146,17 +146,23 @@ class TestGcodeHelpers:
     def test_set_hotend_temp(self, mock_client: MagicMock) -> None:
         mock_client.gcode_script.return_value = "ok"
         set_hotend_temp(mock_client, 210.0)
-        mock_client.gcode_script.assert_called_once_with("M104 S210.0 T0")
+        mock_client.gcode_script.assert_called_once_with(
+            "SET_HEATER_TEMPERATURE HEATER=extruder TARGET=210.0"
+        )
 
     def test_set_hotend_temp_tool1(self, mock_client: MagicMock) -> None:
         mock_client.gcode_script.return_value = "ok"
         set_hotend_temp(mock_client, 200.0, tool=1)
-        mock_client.gcode_script.assert_called_once_with("M104 S200.0 T1")
+        mock_client.gcode_script.assert_called_once_with(
+            "SET_HEATER_TEMPERATURE HEATER=extruder1 TARGET=200.0"
+        )
 
     def test_set_bed_temp(self, mock_client: MagicMock) -> None:
         mock_client.gcode_script.return_value = "ok"
         set_bed_temp(mock_client, 60.0)
-        mock_client.gcode_script.assert_called_once_with("M140 S60.0")
+        mock_client.gcode_script.assert_called_once_with(
+            "SET_HEATER_TEMPERATURE HEATER=heater_bed TARGET=60.0"
+        )
 
 
 class TestListGcodeFiles:
