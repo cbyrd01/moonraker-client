@@ -5,7 +5,11 @@ WebSocket interfaces for controlling 3D printers running Klipper firmware.
 """
 
 from moonraker_client._jsonrpc import JsonRpcError
-from moonraker_client.client import AsyncMoonrakerClient, MoonrakerClient
+from moonraker_client.client import (
+    AsyncMoonrakerClient,
+    MoonrakerClient,
+    NotificationHandler,
+)
 from moonraker_client.exceptions import (
     MoonrakerAPIError,
     MoonrakerAuthError,
@@ -27,5 +31,6 @@ __all__ = [
     "MoonrakerConnectionError",
     "MoonrakerError",
     "MoonrakerTimeoutError",
+    "NotificationHandler",
     "helpers",
 ]

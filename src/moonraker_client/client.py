@@ -7,7 +7,7 @@ into a single flat namespace.
 from __future__ import annotations
 
 import re
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from typing import Any
 
 import httpx
@@ -26,6 +26,15 @@ from moonraker_client.api.printer import AsyncPrinterMixin, PrinterMixin
 from moonraker_client.api.server import AsyncServerMixin, ServerMixin
 from moonraker_client.api.updates import AsyncUpdatesMixin, UpdatesMixin
 from moonraker_client.api.webcams import AsyncWebcamsMixin, WebcamsMixin
+
+#: Signature accepted for WebSocket notification handlers passed to
+#: :meth:`AsyncMoonrakerClient.on`. Handlers receive whatever JSON-RPC
+#: delivers as the notification params — Moonraker sends a ``dict`` for
+#: ``notify_status_update`` but a ``list`` for ``notify_gcode_response``,
+#: so the parameter is typed as ``Any`` and handlers must introspect.
+#: Handlers may be sync or async — the listener loop awaits the return
+#: value if it is a coroutine.
+NotificationHandler = Callable[[Any], Awaitable[None] | None]
 
 
 class MoonrakerClient(
@@ -265,23 +274,25 @@ class AsyncMoonrakerClient(
         )
         return result
 
-    def on(self, event: str, handler: Callable[..., Any]) -> None:
+    def on(self, event: str, handler: NotificationHandler) -> None:
         """Register a handler for WebSocket notification events.
 
         Args:
             event: Notification method name (e.g. "notify_status_update").
-            handler: Callback function receiving the notification params.
+            handler: Callable receiving the notification params dict.
+                May return ``None`` (sync) or a coroutine (async) —
+                async handlers are awaited by the listener loop.
         """
         if self._ws is None:
             raise ConnectionError("WebSocket is not connected. Call connect_websocket() first.")
         self._ws.on_notification(event, handler)
 
-    def off(self, event: str, handler: Callable[..., Any]) -> None:
+    def off(self, event: str, handler: NotificationHandler) -> None:
         """Remove a notification handler.
 
         Args:
             event: Notification method name.
-            handler: The handler to remove.
+            handler: The handler previously registered via :meth:`on`.
         """
         if self._ws is not None:
             self._ws.remove_notification_handler(event, handler)
