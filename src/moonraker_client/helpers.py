@@ -405,9 +405,7 @@ async def async_get_printer_status(client: AsyncMoonrakerClient) -> PrinterStatu
     progress = 0.0
     print_duration = 0.0
     try:
-        result = await client.printer_objects_query(
-            {"print_stats": None, "virtual_sdcard": None}
-        )
+        result = await client.printer_objects_query({"print_stats": None, "virtual_sdcard": None})
         status = result.get("status", {})
         print_stats = status.get("print_stats", {})
         vsd = status.get("virtual_sdcard", {})
@@ -458,9 +456,7 @@ async def async_get_temperatures(client: AsyncMoonrakerClient) -> dict[str, Temp
 async def async_get_print_progress(client: AsyncMoonrakerClient) -> PrintProgress | None:
     """Async version of get_print_progress."""
     try:
-        result = await client.printer_objects_query(
-            {"print_stats": None, "virtual_sdcard": None}
-        )
+        result = await client.printer_objects_query({"print_stats": None, "virtual_sdcard": None})
     except MoonrakerError:
         return None
 
