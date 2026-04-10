@@ -6,15 +6,118 @@ designed to simplify building CLI tools and scripts.
 
 from __future__ import annotations
 
+import logging
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
+from functools import wraps
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, BinaryIO
+from typing import TYPE_CHECKING, Any, BinaryIO, TypeVar
 
-from moonraker_client.exceptions import MoonrakerError
+from moonraker_client.exceptions import (
+    MoonrakerConnectionError,
+    MoonrakerError,
+    MoonrakerTimeoutError,
+)
 
 if TYPE_CHECKING:
     from moonraker_client.client import AsyncMoonrakerClient, MoonrakerClient
+
+_logger = logging.getLogger(__name__)
+
+#: Oldest Moonraker version this client is tested against. Older servers
+#: may still work but are not actively validated; ``check_server_version``
+#: emits a warning on mismatch so users can spot regressions quickly.
+MIN_SUPPORTED_MOONRAKER_VERSION = "0.8.0"
+
+_T = TypeVar("_T")
+
+
+def _parse_version(value: str) -> tuple[int, ...]:
+    """Parse a dotted version string into a tuple of ints for comparison.
+
+    Falls back to an empty tuple on unparseable input so callers treat it
+    as "unknown" (neither below nor above any threshold).
+    """
+    if not value:
+        return ()
+    # Strip any trailing non-numeric suffix (e.g. "0.9.3-42-gabcdef").
+    head = value.split("-", 1)[0].lstrip("v")
+    parts: list[int] = []
+    for seg in head.split("."):
+        try:
+            parts.append(int(seg))
+        except ValueError:
+            break
+    return tuple(parts)
+
+
+def check_server_version(client: MoonrakerClient) -> tuple[str, bool]:
+    """Fetch the server version and warn if below ``MIN_SUPPORTED_MOONRAKER_VERSION``.
+
+    Returns ``(reported_version, is_supported)``. A tuple is returned
+    rather than raising so callers can decide whether to proceed, fail,
+    or simply log.
+    """
+    info = client.server_info()
+    reported = str(info.get("moonraker_version", "") or info.get("version", ""))
+    observed = _parse_version(reported)
+    minimum = _parse_version(MIN_SUPPORTED_MOONRAKER_VERSION)
+    if observed and minimum and observed < minimum:
+        _logger.warning(
+            "Moonraker %s is older than the minimum tested version %s; behavior may be unexpected",
+            reported,
+            MIN_SUPPORTED_MOONRAKER_VERSION,
+        )
+        return reported, False
+    return reported, True
+
+
+def _with_retry(
+    max_attempts: int = 3,
+    backoff: tuple[float, ...] = (0.5, 1.0, 2.0),
+    retry_on: tuple[type[BaseException], ...] = (
+        MoonrakerConnectionError,
+        MoonrakerTimeoutError,
+    ),
+) -> Callable[[Callable[..., _T]], Callable[..., _T]]:
+    """Decorator adding bounded retries to a helper that hits the network.
+
+    Only transient errors (``MoonrakerConnectionError`` and
+    ``MoonrakerTimeoutError`` by default) are retried — API errors bubble
+    up immediately so the caller can act on them. The backoff schedule is
+    a fixed tuple rather than exponential so the behavior is predictable
+    and easy to test; one extra attempt is scheduled per backoff entry.
+    """
+
+    def decorate(fn: Callable[..., _T]) -> Callable[..., _T]:
+        @wraps(fn)
+        def wrapper(*args: Any, **kwargs: Any) -> _T:
+            attempts = max(1, max_attempts)
+            last_exc: BaseException | None = None
+            for attempt in range(attempts):
+                try:
+                    return fn(*args, **kwargs)
+                except retry_on as exc:
+                    last_exc = exc
+                    if attempt >= attempts - 1:
+                        break
+                    delay = backoff[min(attempt, len(backoff) - 1)]
+                    _logger.debug(
+                        "%s transient failure (attempt %d/%d): %s; retrying in %.1fs",
+                        fn.__name__,
+                        attempt + 1,
+                        attempts,
+                        exc,
+                        delay,
+                    )
+                    time.sleep(delay)
+            assert last_exc is not None  # appease mypy; loop guarantees this
+            raise last_exc
+
+        return wrapper
+
+    return decorate
 
 
 @dataclass
@@ -361,6 +464,7 @@ def get_system_health(client: MoonrakerClient) -> dict[str, Any]:
     }
 
 
+@_with_retry()
 def restart_firmware(
     client: MoonrakerClient,
     timeout: float = 30.0,

@@ -6,8 +6,11 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from moonraker_client.exceptions import MoonrakerConnectionError
+from moonraker_client.exceptions import MoonrakerConnectionError, MoonrakerTimeoutError
 from moonraker_client.helpers import (
+    MIN_SUPPORTED_MOONRAKER_VERSION,
+    _with_retry,
+    check_server_version,
     get_print_progress,
     get_printer_status,
     get_system_health,
@@ -182,6 +185,98 @@ class TestListGcodeFiles:
         ]
         files = list_gcode_files(mock_client, sort_by="size")
         assert files[0]["path"] == "small.gcode"
+
+
+class TestCheckServerVersion:
+    """Version-mismatch warning on connect (Phase 4)."""
+
+    def test_returns_supported_on_matching_version(self, mock_client: MagicMock) -> None:
+        mock_client.server_info.return_value = {
+            "moonraker_version": MIN_SUPPORTED_MOONRAKER_VERSION
+        }
+        version, supported = check_server_version(mock_client)
+        assert supported is True
+        assert version == MIN_SUPPORTED_MOONRAKER_VERSION
+
+    def test_returns_supported_on_newer_version(self, mock_client: MagicMock) -> None:
+        mock_client.server_info.return_value = {"moonraker_version": "99.0.0"}
+        _, supported = check_server_version(mock_client)
+        assert supported is True
+
+    def test_warns_on_older_version(
+        self, mock_client: MagicMock, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        mock_client.server_info.return_value = {"moonraker_version": "0.7.0"}
+        import logging
+
+        with caplog.at_level(logging.WARNING, logger="moonraker_client.helpers"):
+            version, supported = check_server_version(mock_client)
+        assert supported is False
+        assert version == "0.7.0"
+        assert any("older than the minimum" in rec.message for rec in caplog.records)
+
+    def test_tolerates_unparseable_version(self, mock_client: MagicMock) -> None:
+        """Unparseable versions should not blow up; treat as unknown/supported."""
+        mock_client.server_info.return_value = {"moonraker_version": "dev-snapshot"}
+        _, supported = check_server_version(mock_client)
+        # An unknown version is not *reported* as below-minimum.
+        assert supported is True
+
+
+class TestWithRetryDecorator:
+    """Bounded retry decorator for transient network failures (Phase 4)."""
+
+    def test_passes_through_on_first_success(self) -> None:
+        call_count = 0
+
+        @_with_retry(max_attempts=3, backoff=(0.0, 0.0, 0.0))
+        def op() -> str:
+            nonlocal call_count
+            call_count += 1
+            return "ok"
+
+        assert op() == "ok"
+        assert call_count == 1
+
+    def test_retries_on_transient_error_then_succeeds(self) -> None:
+        attempts = 0
+
+        @_with_retry(max_attempts=3, backoff=(0.0, 0.0, 0.0))
+        def op() -> str:
+            nonlocal attempts
+            attempts += 1
+            if attempts < 2:
+                raise MoonrakerConnectionError("socket reset")
+            return "ok"
+
+        assert op() == "ok"
+        assert attempts == 2
+
+    def test_gives_up_after_max_attempts(self) -> None:
+        attempts = 0
+
+        @_with_retry(max_attempts=3, backoff=(0.0, 0.0, 0.0))
+        def op() -> str:
+            nonlocal attempts
+            attempts += 1
+            raise MoonrakerTimeoutError("timed out")
+
+        with pytest.raises(MoonrakerTimeoutError):
+            op()
+        assert attempts == 3
+
+    def test_does_not_retry_non_transient_errors(self) -> None:
+        attempts = 0
+
+        @_with_retry(max_attempts=3, backoff=(0.0, 0.0, 0.0))
+        def op() -> str:
+            nonlocal attempts
+            attempts += 1
+            raise ValueError("programming error")
+
+        with pytest.raises(ValueError):
+            op()
+        assert attempts == 1  # Not retried
 
 
 class TestGetSystemHealth:

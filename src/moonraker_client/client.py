@@ -140,6 +140,7 @@ class AsyncMoonrakerClient(
         self._base_url = base_url.rstrip("/")
         self._api_key = api_key
         self._token = token
+        self._timeout = timeout
         self._transport = AsyncHttpTransport(
             base_url=base_url,
             api_key=api_key,
@@ -186,6 +187,7 @@ class AsyncMoonrakerClient(
             api_key=self._api_key,
             token=self._token,
             reconnect=reconnect,
+            request_timeout=self._timeout,
         )
         await self._ws.connect()
 

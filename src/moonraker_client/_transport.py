@@ -26,6 +26,25 @@ from moonraker_client.auth import build_auth
 logger = logging.getLogger(__name__)
 
 
+def _is_permanent_ws_error(exc: BaseException) -> bool:
+    """Return True if a WebSocket connect exception should *not* be retried.
+
+    Permanent errors are those where retrying will never succeed without
+    operator intervention — 4xx handshake failures (auth / bad URL), and
+    outright invalid-URI errors. Everything else (5xx, socket reset, DNS
+    flap, `ConnectionClosed`) is considered transient and should be
+    retried with backoff.
+    """
+    # websockets >=13 exposes `InvalidStatus` with a `.response.status_code`.
+    invalid_status = getattr(websockets.exceptions, "InvalidStatus", None)
+    if invalid_status is not None and isinstance(exc, invalid_status):
+        status = getattr(getattr(exc, "response", None), "status_code", None)
+        return isinstance(status, int) and 400 <= status < 500
+    # InvalidURI / InvalidHandshake subclasses that signal a bad target.
+    invalid_uri = getattr(websockets.exceptions, "InvalidURI", None)
+    return invalid_uri is not None and isinstance(exc, invalid_uri)
+
+
 class HttpTransport:
     """Manages the httpx client lifecycle for sync HTTP requests."""
 
@@ -149,6 +168,18 @@ class WebSocketTransport:
     - Connection lifecycle (connect, disconnect, reconnect with backoff)
     - JSON-RPC request/response matching by ID
     - Notification dispatch to registered handlers
+
+    Errors from user-registered notification handlers are logged, but can
+    additionally be surfaced to an optional handler-error callback (see
+    ``add_handler_error_callback``) so application code can observe them
+    instead of relying on log scraping.
+
+    The reconnect loop distinguishes *retryable* errors (connection closed,
+    transient socket errors, 5xx WebSocket handshakes) from *permanent*
+    ones (4xx handshakes — auth failures, invalid URL). Permanent errors
+    stop the reconnect loop immediately so the owner can surface a clean
+    auth-required error instead of reconnecting forever. When the loop
+    gives up, ``connection_lost`` fires with the triggering exception.
     """
 
     def __init__(
@@ -158,12 +189,14 @@ class WebSocketTransport:
         token: str | None = None,
         reconnect: bool = True,
         max_reconnect_delay: float = 60.0,
+        request_timeout: float = 30.0,
     ) -> None:
         self.ws_url = ws_url
         self._api_key = api_key
         self._token = token
         self._reconnect = reconnect
         self._max_reconnect_delay = max_reconnect_delay
+        self._request_timeout = request_timeout
         self._id_gen = JsonRpcIdGenerator()
         self._connection: ClientConnection | None = None
         self._pending: dict[int, asyncio.Future[Any]] = {}
@@ -171,6 +204,16 @@ class WebSocketTransport:
         self._listener_task: asyncio.Task[None] | None = None
         self._connected = asyncio.Event()
         self._closing = False
+        # Optional callbacks invoked when a user-registered notification
+        # handler raises. Kept as a list so multiple subscribers can
+        # observe independently. Handler-error callbacks are called with
+        # (method, exception) and are expected to be non-blocking.
+        self._handler_error_callbacks: list[Callable[[str, Exception], None]] = []
+        # Set when the reconnect loop gives up (either because the loop
+        # hit a permanent error or because reconnect is disabled).
+        # The value is the last exception observed, or None if the
+        # connection was closed cleanly.
+        self.connection_lost_reason: Exception | None = None
 
     @property
     def is_connected(self) -> bool:
@@ -194,6 +237,22 @@ class WebSocketTransport:
             self._notification_handlers[method] = [
                 h for h in self._notification_handlers[method] if h is not handler
             ]
+
+    def add_handler_error_callback(self, callback: Callable[[str, Exception], None]) -> None:
+        """Register a callback invoked when a notification handler raises.
+
+        The callback receives ``(method_name, exception)`` and must not
+        block — use it to log, notify, or set a flag. Exceptions raised
+        *inside* the callback are themselves logged and swallowed so a
+        broken error handler cannot kill the listener loop.
+        """
+        self._handler_error_callbacks.append(callback)
+
+    def remove_handler_error_callback(self, callback: Callable[[str, Exception], None]) -> None:
+        """Unregister a previously added handler-error callback."""
+        self._handler_error_callbacks = [
+            c for c in self._handler_error_callbacks if c is not callback
+        ]
 
     async def connect(self) -> None:
         """Establish the WebSocket connection and start the message listener."""
@@ -258,7 +317,7 @@ class WebSocketTransport:
 
         try:
             await self._connection.send(request.to_json())
-            return await asyncio.wait_for(future, timeout=30.0)
+            return await asyncio.wait_for(future, timeout=self._request_timeout)
         except asyncio.TimeoutError as exc:
             self._pending.pop(request_id, None)
             raise TimeoutError(f"JSON-RPC request {method} (id={request_id}) timed out") from exc
@@ -298,21 +357,43 @@ class WebSocketTransport:
                                 result = handler(params)
                                 if asyncio.iscoroutine(result):
                                     await result
-                            except Exception:
+                            except Exception as handler_exc:
                                 logger.exception("Error in notification handler for %s", method)
-            except websockets.ConnectionClosed:
+                                self._notify_handler_error(method, handler_exc)
+            except websockets.ConnectionClosed as exc:
                 self._connected.clear()
                 if self._closing or not self._reconnect:
+                    self.connection_lost_reason = exc if not self._closing else None
                     break
                 logger.info("WebSocket disconnected, reconnecting in %.1fs...", reconnect_delay)
                 await asyncio.sleep(reconnect_delay)
                 reconnect_delay = min(reconnect_delay * 2, self._max_reconnect_delay)
                 try:
                     await self.connect()
-                except Exception:
-                    logger.warning("Reconnection failed, retrying...")
+                except Exception as reconnect_exc:
+                    if _is_permanent_ws_error(reconnect_exc):
+                        logger.error(
+                            "WebSocket reconnection hit a permanent error (%s); giving up",
+                            reconnect_exc,
+                        )
+                        self.connection_lost_reason = reconnect_exc
+                        break
+                    logger.warning("Reconnection failed (%s); retrying...", reconnect_exc)
             except asyncio.CancelledError:
                 break
-            except Exception:
+            except Exception as exc:
                 logger.exception("Unexpected error in WebSocket listener")
+                self.connection_lost_reason = exc
                 break
+
+    def _notify_handler_error(self, method: str, exc: Exception) -> None:
+        """Dispatch a notification-handler exception to any registered observers.
+
+        Errors raised *by* the observer itself are logged and swallowed so
+        a broken error callback cannot kill the listener loop.
+        """
+        for callback in self._handler_error_callbacks:
+            try:
+                callback(method, exc)
+            except Exception:
+                logger.exception("Handler-error callback raised while reporting %s", method)
