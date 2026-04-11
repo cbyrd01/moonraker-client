@@ -8,7 +8,68 @@ Generated from OpenAPI spec and hand-tuned.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, BinaryIO
+from typing import TYPE_CHECKING, Any, BinaryIO
+
+if TYPE_CHECKING:
+    from moonraker_client.client import ProgressCallback
+
+
+class _ProgressReader:
+    """Bytes buffer that calls a ``ProgressCallback`` on every ``read()``.
+
+    httpx's multipart encoder calls ``read(n)`` on file-like objects in
+    chunks while streaming the request body. Wrapping the raw upload
+    bytes in this reader lets us emit progress ticks during the POST
+    without implementing a custom multipart encoder.
+
+    The reader also supports ``seek``/``tell`` because some httpx
+    versions call them on multipart fields to compute total body length
+    up front. ``seek(0)`` is treated as a "restart" and re-fires
+    ``progress(0, total)`` so the caller sees a clean start even if
+    httpx rewinds.
+    """
+
+    def __init__(
+        self,
+        data: bytes,
+        progress: ProgressCallback,
+        total: int,
+    ) -> None:
+        self._data = data
+        self._pos = 0
+        self._progress = progress
+        self._total = total
+        self._started = False
+
+    def read(self, size: int = -1) -> bytes:
+        if not self._started:
+            self._progress(0, self._total)
+            self._started = True
+        if size is None or size < 0 or size > len(self._data) - self._pos:
+            size = len(self._data) - self._pos
+        chunk = self._data[self._pos : self._pos + size]
+        self._pos += size
+        self._progress(self._pos, self._total)
+        return chunk
+
+    def seek(self, pos: int, whence: int = 0) -> int:
+        if whence == 0:
+            self._pos = pos
+        elif whence == 1:
+            self._pos += pos
+        elif whence == 2:
+            self._pos = len(self._data) + pos
+        # A rewind to zero is a "restart" — reset the started flag so the
+        # next read() re-announces (0, total).
+        if self._pos == 0:
+            self._started = False
+        return self._pos
+
+    def tell(self) -> int:
+        return self._pos
+
+    def __len__(self) -> int:
+        return len(self._data)
 
 
 class FilesMixin:
@@ -147,14 +208,30 @@ class FilesMixin:
             body["store_only"] = store_only
         return self._request("POST", "/server/files/zip", json=body)  # type: ignore[attr-defined]
 
-    def files_download(self, root: str, filename: str) -> Any:
-        """Download a file.
+    def files_download(
+        self,
+        root: str,
+        filename: str,
+        progress: ProgressCallback | None = None,
+    ) -> bytes:
+        """Download a file and return the raw bytes.
 
         Args:
             root: Root directory (e.g. "gcodes", "config").
             filename: Path to file relative to root.
+            progress: Optional callback invoked with
+                ``(bytes_received, total_bytes)`` as each chunk arrives.
+                ``total_bytes`` is ``None`` when the server does not send
+                a ``Content-Length`` header.
+
+        Returns:
+            The raw file contents. Downloaded files are not JSON
+            (Moonraker serves them verbatim) so this bypasses the
+            standard response unwrapping path.
         """
-        return self._request("GET", f"/server/files/{root}/{filename}")  # type: ignore[attr-defined]
+        return self._stream_download(  # type: ignore[attr-defined]
+            f"/server/files/{root}/{filename}", progress=progress
+        )
 
     def files_delete(self, root: str, filename: str) -> dict[str, Any]:
         """Delete a file.
@@ -174,6 +251,7 @@ class FilesMixin:
         path: str | None = None,
         checksum: str | None = None,
         start_print: bool = False,
+        progress: ProgressCallback | None = None,
     ) -> dict[str, Any]:
         """Upload a file.
 
@@ -183,6 +261,12 @@ class FilesMixin:
             path: Subdirectory within root to save to.
             checksum: Optional SHA256 hex digest for verification.
             start_print: If True, start printing after upload (gcodes only).
+            progress: Optional callback invoked with
+                ``(bytes_sent, total_bytes)`` as the multipart body is
+                read by httpx. When uploading from a file path, total
+                is the file size. When uploading from an arbitrary
+                file-like object, the bytes are pre-read so total is
+                also known. ``seek(0)`` rewinds reset the counter.
         """
         data: dict[str, str] = {"root": root}
         if path is not None:
@@ -196,14 +280,24 @@ class FilesMixin:
             file_path = Path(file)
             # Read bytes eagerly for cross-platform safety (Windows file locking)
             content = file_path.read_bytes()
-            files = {"file": (file_path.name, content, "application/octet-stream")}
-            return self._request("POST", "/server/files/upload", data=data, files=files)  # type: ignore[attr-defined]
+            name = file_path.name
         else:
             name = getattr(file, "name", "upload")
             if isinstance(name, (str, Path)):
                 name = Path(name).name
-            files = {"file": (name, file, "application/octet-stream")}
-            return self._request("POST", "/server/files/upload", data=data, files=files)  # type: ignore[attr-defined]
+            content = file.read()
+            if not isinstance(content, (bytes, bytearray)):
+                raise TypeError(
+                    f"file.read() returned {type(content).__name__}; file-like must yield bytes"
+                )
+
+        if progress is not None:
+            body: Any = _ProgressReader(bytes(content), progress, len(content))
+        else:
+            body = bytes(content)
+
+        files = {"file": (name, body, "application/octet-stream")}
+        return self._request("POST", "/server/files/upload", data=data, files=files)  # type: ignore[attr-defined]
 
     def files_klippy_log(self) -> Any:
         """Download klippy.log."""
@@ -351,14 +445,22 @@ class AsyncFilesMixin:
             body["store_only"] = store_only
         return await self._request("POST", "/server/files/zip", json=body)  # type: ignore[attr-defined]
 
-    async def files_download(self, root: str, filename: str) -> Any:
-        """Download a file.
+    async def files_download(
+        self,
+        root: str,
+        filename: str,
+        progress: ProgressCallback | None = None,
+    ) -> bytes:
+        """Download a file and return the raw bytes.
 
         Args:
             root: Root directory.
             filename: Path to file relative to root.
+            progress: Optional ``(bytes, total)`` callback, see sync variant.
         """
-        return await self._request("GET", f"/server/files/{root}/{filename}")  # type: ignore[attr-defined]
+        return await self._stream_download(  # type: ignore[attr-defined]
+            f"/server/files/{root}/{filename}", progress=progress
+        )
 
     async def files_delete(self, root: str, filename: str) -> dict[str, Any]:
         """Delete a file.
@@ -378,6 +480,7 @@ class AsyncFilesMixin:
         path: str | None = None,
         checksum: str | None = None,
         start_print: bool = False,
+        progress: ProgressCallback | None = None,
     ) -> dict[str, Any]:
         """Upload a file.
 
@@ -387,6 +490,8 @@ class AsyncFilesMixin:
             path: Subdirectory within root.
             checksum: Optional SHA256 hex digest.
             start_print: Start printing after upload.
+            progress: Optional ``(bytes_sent, total_bytes)`` callback, see
+                sync variant.
         """
         data: dict[str, str] = {"root": root}
         if path is not None:
@@ -400,14 +505,24 @@ class AsyncFilesMixin:
             file_path = Path(file)
             # Read bytes eagerly so the file handle is not held across await
             content = file_path.read_bytes()
-            files = {"file": (file_path.name, content, "application/octet-stream")}
-            return await self._request("POST", "/server/files/upload", data=data, files=files)  # type: ignore[attr-defined]
+            name = file_path.name
         else:
             name = getattr(file, "name", "upload")
             if isinstance(name, (str, Path)):
                 name = Path(name).name
-            files = {"file": (name, file, "application/octet-stream")}
-            return await self._request("POST", "/server/files/upload", data=data, files=files)  # type: ignore[attr-defined]
+            content = file.read()
+            if not isinstance(content, (bytes, bytearray)):
+                raise TypeError(
+                    f"file.read() returned {type(content).__name__}; file-like must yield bytes"
+                )
+
+        if progress is not None:
+            body: Any = _ProgressReader(bytes(content), progress, len(content))
+        else:
+            body = bytes(content)
+
+        files = {"file": (name, body, "application/octet-stream")}
+        return await self._request("POST", "/server/files/upload", data=data, files=files)  # type: ignore[attr-defined]
 
     async def files_klippy_log(self) -> Any:
         """Download klippy.log."""

@@ -9,6 +9,7 @@ from moonraker_client.client import (
     AsyncMoonrakerClient,
     MoonrakerClient,
     NotificationHandler,
+    ProgressCallback,
 )
 from moonraker_client.exceptions import (
     MoonrakerAPIError,
@@ -32,5 +33,6 @@ __all__ = [
     "MoonrakerError",
     "MoonrakerTimeoutError",
     "NotificationHandler",
+    "ProgressCallback",
     "helpers",
 ]

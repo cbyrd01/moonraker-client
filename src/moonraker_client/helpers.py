@@ -21,7 +21,11 @@ from moonraker_client.exceptions import (
 )
 
 if TYPE_CHECKING:
-    from moonraker_client.client import AsyncMoonrakerClient, MoonrakerClient
+    from moonraker_client.client import (
+        AsyncMoonrakerClient,
+        MoonrakerClient,
+        ProgressCallback,
+    )
 
 _logger = logging.getLogger(__name__)
 
@@ -425,6 +429,7 @@ def upload_gcode(
     local_path: str | Path,
     remote_path: str | None = None,
     start: bool = False,
+    progress: ProgressCallback | None = None,
 ) -> dict[str, Any]:
     """Upload a gcode file to the printer.
 
@@ -433,11 +438,13 @@ def upload_gcode(
         local_path: Path to the local gcode file.
         remote_path: Optional subdirectory on the printer.
         start: If True, start printing after upload.
+        progress: Optional ``(bytes_sent, total_bytes)`` callback — see
+            :class:`moonraker_client.ProgressCallback`.
 
     Returns:
         Upload response dict with item info.
     """
-    return client.files_upload(local_path, path=remote_path, start_print=start)
+    return client.files_upload(local_path, path=remote_path, start_print=start, progress=progress)
 
 
 def get_system_health(client: MoonrakerClient) -> dict[str, Any]:

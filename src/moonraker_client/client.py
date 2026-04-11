@@ -36,6 +36,15 @@ from moonraker_client.api.webcams import AsyncWebcamsMixin, WebcamsMixin
 #: value if it is a coroutine.
 NotificationHandler = Callable[[Any], Awaitable[None] | None]
 
+#: Signature for file transfer progress callbacks. Invoked with
+#: ``(bytes_transferred, total_bytes)`` where ``total_bytes`` is ``None``
+#: when the size cannot be determined up front (e.g. a streaming upload
+#: from a file-like of unknown length). Called repeatedly as bytes flow
+#: through the transport; for uploads the total is known when the source
+#: is a file path, and for downloads the total is taken from the
+#: ``Content-Length`` header when present.
+ProgressCallback = Callable[[int, "int | None"], None]
+
 
 class MoonrakerClient(
     PrinterMixin,
@@ -98,6 +107,47 @@ class MoonrakerClient(
         except httpx.HTTPError as exc:
             handle_request_error(exc)
         return unwrap_response(response)
+
+    def _stream_download(
+        self,
+        path: str,
+        progress: ProgressCallback | None = None,
+    ) -> bytes:
+        """Download a file from ``path`` and return the raw bytes.
+
+        Unlike :meth:`_request`, the response is not JSON-unwrapped —
+        ``files_download`` serves raw binary (gcode, logs, config) and
+        must not be parsed as JSON. The download streams through
+        ``httpx.Client.stream`` so a ``progress`` callback can observe
+        bytes-so-far / total (taken from ``Content-Length`` when
+        available) as each chunk arrives.
+        """
+        try:
+            with self._transport.client.stream("GET", path) as response:
+                if response.status_code >= 400:
+                    # Materialize the body so the error handler in
+                    # ``unwrap_response`` can extract a proper error
+                    # message — for 4xx/5xx we expect JSON.
+                    response.read()
+                    unwrap_response(response)
+                    return b""  # unreachable — unwrap_response raises
+                total_header = response.headers.get("content-length")
+                total: int | None = int(total_header) if total_header else None
+                received = 0
+                if progress is not None:
+                    progress(0, total)
+                chunks: list[bytes] = []
+                for chunk in response.iter_bytes():
+                    if not chunk:
+                        continue
+                    chunks.append(chunk)
+                    received += len(chunk)
+                    if progress is not None:
+                        progress(received, total)
+                return b"".join(chunks)
+        except httpx.HTTPError as exc:
+            handle_request_error(exc)
+            return b""  # unreachable — handle_request_error raises
 
     def close(self) -> None:
         """Close the underlying HTTP connection."""
@@ -176,6 +226,40 @@ class AsyncMoonrakerClient(
         except httpx.HTTPError as exc:
             handle_request_error(exc)
         return unwrap_response(response)
+
+    async def _stream_download(
+        self,
+        path: str,
+        progress: ProgressCallback | None = None,
+    ) -> bytes:
+        """Async version of :meth:`MoonrakerClient._stream_download`.
+
+        Streams the response via ``httpx.AsyncClient.stream`` and calls
+        ``progress`` after each chunk. Returns raw bytes.
+        """
+        try:
+            async with self._transport.client.stream("GET", path) as response:
+                if response.status_code >= 400:
+                    await response.aread()
+                    unwrap_response(response)
+                    return b""
+                total_header = response.headers.get("content-length")
+                total: int | None = int(total_header) if total_header else None
+                received = 0
+                if progress is not None:
+                    progress(0, total)
+                chunks: list[bytes] = []
+                async for chunk in response.aiter_bytes():
+                    if not chunk:
+                        continue
+                    chunks.append(chunk)
+                    received += len(chunk)
+                    if progress is not None:
+                        progress(received, total)
+                return b"".join(chunks)
+        except httpx.HTTPError as exc:
+            handle_request_error(exc)
+            return b""
 
     # -- WebSocket methods --
 
