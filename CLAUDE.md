@@ -29,8 +29,9 @@ ruff format src/ tests/
 # Type check
 mypy src/moonraker_client/
 
-# Code generator (re-run when OpenAPI spec changes)
-python tools/generate.py /path/to/openapi.yaml
+# Regenerate the OpenAPI spec and Python client code
+# (requires: pip install -e ".[codegen]" and `git submodule update --init`)
+./tools/regenerate_openapi.sh
 ```
 
 ## Architecture
@@ -51,7 +52,7 @@ python tools/generate.py /path/to/openapi.yaml
 
 - **Mixin composition**: Each `api/*.py` defines sync + async mixin classes. The client classes inherit all mixins, giving a flat `client.method()` API.
 - **Response unwrapping**: Moonraker wraps all responses in `{"result": ...}`. The `_base.py:unwrap_response()` handles this automatically.
-- **Generated code**: `tools/generate.py` parses the OpenAPI YAML spec and produces `api/*.py` and `models/generated.py`. Output is committed and hand-tuned.
+- **Generated code, two-stage pipeline**: `third_party/moonraker` (submodule → Arksine/moonraker) supplies `docs/external_api/*.md`; `openapi/scripts/generate_openapi.py` writes `openapi/openapi.yaml`; `tools/generate.py` consumes that YAML to write `api/*.py` and `models/generated.py`. Both stages are wrapped by `tools/regenerate_openapi.sh`. The YAML and Python output are committed; `api/*.py` files are hand-tuned after generation (e.g. `files.py` `_ProgressReader`).
 - **WebSocket is optional**: HTTP works standalone. WebSocket requires explicit `connect_websocket()` and is async-only.
 - **Error handling**: Helpers catch `MoonrakerError` (not bare `Exception`) for expected failure modes. `JsonRpcError` is exported from the public API for WebSocket error handling.
 - **Async helpers**: Key helpers have async variants prefixed with `async_` (e.g., `async_get_printer_status`, `async_get_temperatures`).

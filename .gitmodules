@@ -1,0 +1,3 @@
+[submodule "moonraker"]
+	path = third_party/moonraker
+	url = https://github.com/Arksine/moonraker.git

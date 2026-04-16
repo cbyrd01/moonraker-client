@@ -38,17 +38,67 @@ mypy src/moonraker_client/
 
 ## Code Generator
 
-The API endpoint methods and data models are generated from the Moonraker OpenAPI spec:
+The API endpoint methods and data models are generated from the Moonraker API docs via a two-stage pipeline:
 
-```bash
-python tools/generate.py /path/to/openapi.yaml
+```
+third_party/moonraker/docs/external_api/*.md   (submodule → Arksine/moonraker)
+        │
+        ▼
+openapi/scripts/generate_openapi.py
+        │
+        ▼
+openapi/openapi.yaml                           (committed)
+        │
+        ▼
+tools/generate.py
+        │
+        ▼
+src/moonraker_client/api/*.py
+src/moonraker_client/models/generated.py       (committed, hand-tuned)
 ```
 
-Generated files:
-- `src/moonraker_client/api/*.py` - Endpoint method stubs
-- `src/moonraker_client/models/generated.py` - Dataclass models
+### Setup
 
-Generated output is committed and hand-tuned. Re-run when the upstream spec changes.
+```bash
+pip install -e ".[codegen]"
+git submodule update --init --recursive
+```
+
+### Regenerating
+
+```bash
+# Pull the latest markdown docs from upstream moonraker
+git -C third_party/moonraker pull origin master
+
+# Run both stages
+./tools/regenerate_openapi.sh
+
+# Review diffs before committing
+git diff openapi/openapi.yaml src/moonraker_client/
+```
+
+### Viewing the API docs
+
+`openapi/index.html` is a static Redoc viewer that renders `openapi/openapi.yaml`. To browse:
+
+```bash
+python -m http.server --directory openapi 8080
+# visit http://localhost:8080/
+```
+
+No build step — Redoc loads from CDN.
+
+### Hand-tunes
+
+Some files under `src/moonraker_client/api/` are hand-tuned after generation (e.g. `files.py` contains a `_ProgressReader` helper for upload progress). If the regenerator overwrites them, reapply the hand-tune manually and include it in the commit.
+
+### Commit convention
+
+Bundle the submodule bump, `openapi/openapi.yaml` changes, and regenerated Python code in a single commit so the tree stays consistent.
+
+### TODO
+
+When the openapi work lands in `Arksine/moonraker` canonical, add a CI job that runs `tools/regenerate_openapi.sh` weekly and fails if `git diff` is non-empty — surfaces spec drift automatically.
 
 ## Project Structure
 

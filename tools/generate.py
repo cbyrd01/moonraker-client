@@ -474,7 +474,7 @@ def generate_models(spec: dict[str, Any]) -> str:
 
 def main() -> None:
     spec_path = sys.argv[1] if len(sys.argv) > 1 else str(
-        Path(__file__).parent.parent.parent / "moonraker" / "openapi" / "docs" / "openapi.yaml"
+        Path(__file__).parent.parent / "openapi" / "openapi.yaml"
     )
 
     print(f"Loading spec from: {spec_path}")

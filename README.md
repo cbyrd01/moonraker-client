@@ -155,6 +155,8 @@ ruff check src/ tests/
 mypy src/moonraker_client/
 ```
 
+To regenerate the OpenAPI spec and Python client code from upstream Moonraker, see [docs/contributing.md](docs/contributing.md#code-generator).
+
 ## License
 
 GPL-3.0 - See [LICENSE](LICENSE) for details.
