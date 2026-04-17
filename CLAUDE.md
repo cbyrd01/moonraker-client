@@ -68,3 +68,49 @@ mypy src/moonraker_client/
 - `tests/unit/` - Mock-based unit tests (pytest-httpx mocks)
 - `tests/functional/` - Tests against a live Moonraker server (skipped without `MOONRAKER_URL` + `--functional`)
 - Functional test server configured via `MOONRAKER_URL` env var
+
+## CI / Release
+
+### Workflows
+
+- `.github/workflows/ci.yml` — runs on every PR and push to `main`. Matrix across Python 3.10–3.13: `ruff check`, `ruff format --check`, `mypy`, `pytest tests/unit/`. Functional tests are not run in CI.
+- `.github/workflows/release.yml` — triggered on `v*.*.*` tag push (and `workflow_dispatch` for TestPyPI-only dry-runs). Three jobs: `build` (sdist + wheel via `python -m build`) → `publish-testpypi` → `publish-pypi`. The PyPI job is gated on a tag ref, so manual dispatch can never reach prod PyPI.
+
+### PyPI Trusted Publishing (OIDC — no API tokens)
+
+Publishing is configured via [PyPI Trusted Publishing](https://docs.pypi.org/trusted-publishers/) — short-lived OIDC credentials minted by GitHub per job. No long-lived API tokens live in the repo or anywhere else.
+
+Configured on both `pypi.org` and `test.pypi.org` (separate accounts) under *Your projects → Publishing*:
+
+| Field | Value |
+| --- | --- |
+| Project name | `moonraker-client` |
+| Owner | `cbyrd01` |
+| Repository | `moonraker-client` |
+| Workflow | `release.yml` |
+| Environment | `pypi` (prod) / `testpypi` (test) |
+
+GitHub environments (*Settings → Environments*):
+
+- `testpypi` — no restrictions.
+- `pypi` — required reviewer (cbyrd01); deployment refs restricted to `v*.*.*` tags on branch `main`.
+
+Attestations (PEP 740) are emitted automatically by `pypa/gh-action-pypi-publish@release/v1`; no separate Sigstore step.
+
+### Cutting a release
+
+1. Bump the version in **both** places (they must match; the build job verifies this):
+   - `pyproject.toml` → `[project] version = "X.Y.Z"`
+   - `src/moonraker_client/__init__.py` → `__version__ = "X.Y.Z"`
+2. Commit: `release: vX.Y.Z`.
+3. Tag and push:
+   ```bash
+   git tag vX.Y.Z
+   git push origin main
+   git push origin vX.Y.Z
+   ```
+4. GitHub Actions runs `build` → `publish-testpypi` automatically.
+5. Approve the `pypi` environment deployment in the Actions UI. The `publish-pypi` job will then upload to PyPI.
+6. Verify at <https://pypi.org/project/moonraker-client/>.
+
+To smoke-test the release pipeline without cutting a real release, run `release.yml` via *Actions → Release → Run workflow*. This publishes to TestPyPI only; the PyPI job is skipped because there's no tag ref.
