@@ -2,11 +2,29 @@
 
 from __future__ import annotations
 
+import importlib.util
 import os
 
 import pytest
 
 MOONRAKER_URL = os.environ.get("MOONRAKER_URL", "")
+
+# pytest-httpx dropped Python 3.8 support before it gained httpx>=0.27
+# compatibility, so on 3.8 the mock-based unit tests that import
+# ``pytest_httpx`` can't run. Skip collecting those files instead of
+# failing with ImportError at collection time.
+if importlib.util.find_spec("pytest_httpx") is None:
+    collect_ignore_glob = [
+        "unit/test_auth.py",
+        "unit/test_client.py",
+        "unit/api/test_auth_api.py",
+        "unit/api/test_files.py",
+        "unit/api/test_history.py",
+        "unit/api/test_jobs.py",
+        "unit/api/test_machine.py",
+        "unit/api/test_printer.py",
+        "unit/api/test_server.py",
+    ]
 
 
 def pytest_configure(config: pytest.Config) -> None:
