@@ -7,8 +7,13 @@ into a single flat namespace.
 from __future__ import annotations
 
 import re
-from collections.abc import Awaitable, Callable
-from typing import Any
+
+# `typing` variants are used (not `collections.abc`) because the two type
+# aliases below evaluate at module import. `collections.abc.Awaitable`
+# / `Callable` only became subscriptable on Python 3.9+ (PEP 585), so on
+# 3.8 the runtime expressions would raise ``TypeError: 'ABCMeta' object
+# is not subscriptable``. The `typing` variants work across 3.8+.
+from typing import Any, Awaitable, Callable, Optional
 
 import httpx
 
@@ -34,7 +39,7 @@ from moonraker_client.api.webcams import AsyncWebcamsMixin, WebcamsMixin
 #: so the parameter is typed as ``Any`` and handlers must introspect.
 #: Handlers may be sync or async — the listener loop awaits the return
 #: value if it is a coroutine.
-NotificationHandler = Callable[[Any], Awaitable[None] | None]
+NotificationHandler = Callable[[Any], Optional[Awaitable[None]]]
 
 #: Signature for file transfer progress callbacks. Invoked with
 #: ``(bytes_transferred, total_bytes)`` where ``total_bytes`` is ``None``
@@ -43,7 +48,7 @@ NotificationHandler = Callable[[Any], Awaitable[None] | None]
 #: through the transport; for uploads the total is known when the source
 #: is a file path, and for downloads the total is taken from the
 #: ``Content-Length`` header when present.
-ProgressCallback = Callable[[int, "int | None"], None]
+ProgressCallback = Callable[[int, Optional[int]], None]
 
 
 class MoonrakerClient(

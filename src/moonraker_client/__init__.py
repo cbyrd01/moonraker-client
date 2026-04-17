@@ -19,7 +19,7 @@ from moonraker_client.exceptions import (
     MoonrakerTimeoutError,
 )
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 from moonraker_client import helpers
 

@@ -10,7 +10,9 @@ from typing import Any
 
 import httpx
 import websockets
+import websockets.exceptions
 from websockets.asyncio.client import ClientConnection
+from websockets.asyncio.client import connect as websocket_connect
 
 from moonraker_client._jsonrpc import (
     JsonRpcIdGenerator,
@@ -263,7 +265,12 @@ class WebSocketTransport:
         if self._token:
             extra_headers["Authorization"] = f"Bearer {self._token}"
 
-        self._connection = await websockets.connect(
+        # Use the asyncio-client API explicitly. The top-level
+        # ``websockets.connect`` alias is the legacy client on websockets
+        # 13.x (the last line that supports Python 3.8) and the new API
+        # on 14+. Importing directly from ``websockets.asyncio.client``
+        # gives us the same ``additional_headers`` kwarg across both.
+        self._connection = await websocket_connect(
             self.ws_url,
             additional_headers=extra_headers if extra_headers else None,
         )

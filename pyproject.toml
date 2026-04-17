@@ -4,11 +4,11 @@ build-backend = "hatchling.build"
 
 [project]
 name = "moonraker-client"
-version = "0.1.0"
+version = "0.2.0"
 description = "Python client library for the Moonraker API"
 readme = "README.md"
 license = "GPL-3.0"
-requires-python = ">=3.10"
+requires-python = ">=3.8"
 authors = [
     { name = "Christopher Byrd" },
 ]
@@ -18,6 +18,8 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -33,8 +35,11 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0",
-    "pytest-asyncio>=0.24",
-    "pytest-httpx>=0.34",
+    "pytest-asyncio>=0.24; python_version>='3.9'",
+    "pytest-asyncio>=0.21,<0.24; python_version<'3.9'",
+    # pytest-httpx dropped 3.8 before it gained httpx>=0.27 compatibility; on
+    # 3.8 the httpx-mock tests skip via `pytest.importorskip("pytest_httpx")`.
+    "pytest-httpx>=0.34; python_version>='3.9'",
     "ruff>=0.8",
     "mypy>=1.13",
 ]
@@ -58,7 +63,7 @@ markers = [
 asyncio_mode = "auto"
 
 [tool.ruff]
-target-version = "py310"
+target-version = "py38"
 line-length = 99
 
 [tool.ruff.lint]
@@ -69,7 +74,10 @@ select = ["B", "C4", "E", "F", "I", "N", "RUF", "SIM", "UP", "W"]
 "src/moonraker_client/models/generated.py" = ["E501"]
 
 [tool.mypy]
-python_version = "3.10"
+# mypy 1.14+ no longer supports `python_version = "3.8"` as a target (its
+# lowest is 3.9). Package runtime still supports 3.8; 3.9 is close enough
+# for type-check semantics.
+python_version = "3.9"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true

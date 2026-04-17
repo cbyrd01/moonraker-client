@@ -18,7 +18,7 @@ A typed, ergonomic Python client library for the [Moonraker API](https://moonrak
 pip install moonraker-client
 ```
 
-**Requires Python 3.10+**
+**Requires Python 3.8+**
 
 ## Quick Start
 
